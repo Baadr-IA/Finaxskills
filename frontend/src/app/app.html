@@ -1,0 +1,31 @@
+<div class="app-shell">
+  <header class="app-header">
+    <div class="app-header__container">
+      <a class="app-brand" routerLink="/">
+        <span class="app-brand__dot" aria-hidden="true"></span>
+        <span>template-app-name</span>
+      </a>
+      <nav class="app-nav" aria-label="Main navigation">
+        <a class="app-nav__link" routerLink="/hello" routerLinkActive="is-active">Hello World</a>
+        <a class="app-nav__link" routerLink="/good-night" routerLinkActive="is-active">Good Night World</a>
+      </nav>
+
+      <div class="app-auth" aria-live="polite">
+        @if (authenticated()) {
+          <p class="app-auth__user">Signed in as {{ username() ?? 'user' }}</p>
+          <button type="button" class="app-auth__button app-auth__button--secondary" (click)="logout()">
+            Logout
+          </button>
+        } @else {
+          <button type="button" class="app-auth__button" (click)="login()">
+            Login
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main" id="main-content">
+    <router-outlet />
+  </main>
+</div>

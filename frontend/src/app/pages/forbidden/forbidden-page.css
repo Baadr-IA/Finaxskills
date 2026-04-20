@@ -1,0 +1,40 @@
+.forbidden-card {
+  margin-inline: auto;
+  max-width: 720px;
+  border: 1px solid var(--finaxys-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  background-color: var(--finaxys-surface-card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--finaxys-brand-black) 8%, transparent);
+}
+
+.forbidden-label {
+  margin: 0;
+  color: var(--finaxys-text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--font-size-caption);
+}
+
+.forbidden-card h1 {
+  margin: var(--spacing-sm) 0;
+  color: var(--finaxys-brand-red);
+}
+
+.forbidden-text {
+  margin: 0;
+  color: var(--finaxys-text-secondary);
+}
+
+.forbidden-link {
+  display: inline-flex;
+  margin-top: var(--spacing-lg);
+  color: var(--finaxys-brand-red);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.forbidden-link:hover {
+  text-decoration: underline;
+}

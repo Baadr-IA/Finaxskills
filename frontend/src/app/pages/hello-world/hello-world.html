@@ -1,0 +1,84 @@
+<section class="welcome-card" aria-live="polite">
+  <p class="section-label">Greetings administration</p>
+
+  @if (isLoading()) {
+    <p class="state-message state-message--loading">Loading greetings...</p>
+  } @else if (error()) {
+    <p class="state-message state-message--error">{{ error() }}</p>
+  } @else {
+    <div class="create-form">
+      <h2>Create greeting</h2>
+      <label>
+        Key
+        <input
+          type="text"
+          [ngModel]="newKey()"
+          (ngModelChange)="newKey.set($event)"
+          [disabled]="!canCreate() || isSubmitting()"
+          placeholder="example: welcome"
+        />
+      </label>
+      <label>
+        Message
+        <input
+          type="text"
+          [ngModel]="newMessage()"
+          (ngModelChange)="newMessage.set($event)"
+          [disabled]="!canCreate() || isSubmitting()"
+          placeholder="example: Welcome everyone"
+        />
+      </label>
+      <button type="button" (click)="createGreeting()" [disabled]="!canCreate() || isSubmitting()">
+        Add
+      </button>
+    </div>
+
+    @if (operationError()) {
+      <p class="state-message state-message--error">{{ operationError() }}</p>
+    }
+
+    <table class="greetings-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Message</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of greetings(); track item.id) {
+          <tr>
+            @if (editingId() === item.id) {
+              <td>
+                <input type="text" [ngModel]="editKey()" (ngModelChange)="editKey.set($event)" [disabled]="isSubmitting()" />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  [ngModel]="editMessage()"
+                  (ngModelChange)="editMessage.set($event)"
+                  [disabled]="isSubmitting()"
+                />
+              </td>
+              <td class="row-actions">
+                <button type="button" (click)="saveEdit(item.id)" [disabled]="!canUpdate() || isSubmitting()">Save</button>
+                <button type="button" (click)="cancelEdit()" [disabled]="isSubmitting()">Cancel</button>
+              </td>
+            } @else {
+              <td>{{ item.key }}</td>
+              <td>{{ item.message }}</td>
+              <td class="row-actions">
+                <button type="button" (click)="startEdit(item)" [disabled]="!canUpdate() || isSubmitting()">Edit</button>
+                <button type="button" (click)="deleteGreeting(item.id)" [disabled]="!canDelete() || isSubmitting()">Delete</button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="empty-state">No greetings available.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

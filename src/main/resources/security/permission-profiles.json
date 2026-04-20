@@ -1,0 +1,35 @@
+[
+  {
+    "key": "collaborator",
+    "label": "Collaborator",
+    "permissions": [
+      {
+        "resource": "GREETINGS",
+        "actions": ["CREATE"],
+        "scope": "ALL"
+      }
+    ]
+  },
+  {
+    "key": "hr",
+    "label": "HR",
+    "permissions": [
+      {
+        "resource": "GREETINGS",
+        "actions": ["READ", "CREATE", "UPDATE"],
+        "scope": "ALL"
+      }
+    ]
+  },
+  {
+    "key": "admin",
+    "label": "Admin",
+    "permissions": [
+      {
+        "resource": "GREETINGS",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE", "PUBLISH"],
+        "scope": "ALL"
+      }
+    ]
+  }
+]

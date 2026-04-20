@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "skills": {
+    "angular-developer": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "computedHash": "13f864392379685bb8935f93989ac3c08c74e36391499d2748e8e0657ef0ee90"
+    },
+    "angular-new-app": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "computedHash": "d9f712544847ab80ef7ed20043820afd275c394ca05340c2f20a0f051e35d945"
+    },
+    "api-and-interface-design": {
+      "source": "addyosmani/agent-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "0fabf9c3fc2577eab57833f660efef943b78d5c6ae5f0d8e82b600cc22563dbc"
+    },
+    "dr-jskill": {
+      "source": "jdubois/dr-jskill",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "769e649e6d229660f1089b92576eeaa796281efd86848135daf5d13a2174d065"
+    }
+  }
+}

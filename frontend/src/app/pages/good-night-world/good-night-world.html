@@ -1,0 +1,12 @@
+<section class="welcome-card" aria-live="polite">
+  <p class="section-label">Sign-off page</p>
+
+  @if (greeting.isLoading()) {
+    <p class="state-message state-message--loading">Loading...</p>
+  } @else if (greeting.error()) {
+    <p class="state-message state-message--error">Could not reach the server.</p>
+  } @else {
+    <h1>{{ greeting.value()?.message }}</h1>
+    <p class="subtitle">See you tomorrow!</p>
+  }
+</section>
