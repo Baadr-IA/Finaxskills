@@ -17,6 +17,12 @@
       "sourceType": "github",
       "computedHash": "0fabf9c3fc2577eab57833f660efef943b78d5c6ae5f0d8e82b600cc22563dbc"
     },
+    "code-review-and-quality": {
+      "source": "addyosmani/agent-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "31afa3c52991ed84a1f0b97d5a9dc9f1ada08307108e88c3102de7c41a50c0a4"
+    },
     "dr-jskill": {
       "source": "jdubois/dr-jskill",
       "ref": "main",
