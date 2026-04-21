@@ -1,0 +1,23 @@
+{
+  "project": "Finaxys Skills Portal",
+  "version": "1.0.0",
+  "runtime": {
+    "engine": "Gemini-CLI",
+    "workflow": [
+      {
+        "stage": "Pre-Execution",
+        "hook": ".agents/hooks/pre-skill.js"
+      },
+      {
+        "stage": "Guard",
+        "hook": ".agents/hooks/guard.js",
+        "triggers": ["write_file", "replace"]
+      },
+      {
+        "stage": "Post-Execution",
+        "hook": ".agents/hooks/post-skill.js"
+      }
+    ]
+  },
+  "skills_directory": ".agents/skills"
+}
