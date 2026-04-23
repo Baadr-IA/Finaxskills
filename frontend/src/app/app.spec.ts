@@ -46,7 +46,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.app-brand')?.textContent).toContain(
-      'template-app-name'
+      'Skills RH'
     );
   });
 });

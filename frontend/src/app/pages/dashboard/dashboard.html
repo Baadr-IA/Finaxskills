@@ -1,0 +1,113 @@
+<div class="page">
+  <div class="page-header-row">
+    <div>
+      <div class="breadcrumb"><span class="bc-home">Accueil</span><span class="bc-sep">/</span><span class="bc-current">Tableau de bord</span></div>
+      <h1>Tableau de bord RH</h1>
+      <p class="page-subtitle">Suivi des compétences des collaborateurs</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="empty-state"><p>Chargement...</p></div>
+  } @else {
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Collaborateurs</span>
+          <div class="stat-icon-circle blue">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+        </div>
+        <p class="stat-value">{{ totalCollaborators() }}</p>
+        <a [routerLink]="['/collaborateurs']" class="link-brand text-xs">Voir tous →</a>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Compétences</span>
+          <div class="stat-icon-circle orange">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+        </div>
+        <p class="stat-value">{{ totalSkills() }}</p>
+        <a [routerLink]="['/competences']" class="link-brand text-xs">Gérer →</a>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Niveau moyen RH</span>
+          <div class="stat-icon-circle green">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          </div>
+        </div>
+        <p class="stat-value">@if (averageHrLevel() !== null) { {{ averageHrLevel() }}<span style="font-size:1rem;color:var(--text-muted)">/5</span> } @else { — }</p>
+        <span class="text-xs text-muted">basé sur les évaluations</span>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Sans évaluation</span>
+          <div class="stat-icon-circle orange">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+        </div>
+        <p class="stat-value" style="color:var(--orange-soft)">{{ pendingCollaborators().length }}</p>
+        <span class="text-xs text-muted">à évaluer</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="section-card">
+        <div class="section-card-header">
+          <div>
+            <h3 class="section-title">Top compétences</h3>
+            <p class="section-subtitle">Par niveau moyen RH</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          @if (topSkills().length === 0) {
+            <div class="empty-row">Aucune évaluation RH disponible.</div>
+          } @else {
+            @for (skill of topSkills(); track skill.name; let i = $index) {
+              <div style="margin-bottom:1rem">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-semibold text-sm">{{ i + 1 }}. {{ skill.name }}</span>
+                  <span class="text-muted text-sm">{{ skill.avg.toFixed(1) }} / 5</span>
+                </div>
+                <div class="progress-row">
+                  <div class="progress-bar full">
+                    <div class="progress-fill" [style.width.%]="(skill.avg / 5) * 100"></div>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-card-header">
+          <div>
+            <h3 class="section-title">À évaluer</h3>
+            <p class="section-subtitle">Collaborateurs sans évaluation RH</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          @if (pendingCollaborators().length === 0) {
+            <div style="text-align:center;padding:2rem;color:var(--green);font-weight:600">✓ Tous les collaborateurs ont été évalués</div>
+          } @else {
+            @for (collab of pendingCollaborators(); track collab.id) {
+              <div class="assessment-row">
+                <div>
+                  <div class="font-semibold">{{ collab.firstName }} {{ collab.lastName }}</div>
+                  <div class="text-xs text-muted">{{ collab.jobTitle ?? '—' }}</div>
+                </div>
+                <a [routerLink]="['/collaborateurs', collab.id]" class="link-brand text-sm">Évaluer →</a>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -4,9 +4,24 @@
     "label": "Collaborator",
     "permissions": [
       {
-        "resource": "GREETINGS",
-        "actions": ["CREATE"],
+        "resource": "COLLABORATORS",
+        "actions": ["READ"],
+        "scope": "SELF"
+      },
+      {
+        "resource": "SKILLS",
+        "actions": ["READ"],
         "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_CATEGORIES",
+        "actions": ["READ"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_ASSESSMENTS",
+        "actions": ["READ", "CREATE", "UPDATE"],
+        "scope": "SELF"
       }
     ]
   },
@@ -15,7 +30,22 @@
     "label": "HR",
     "permissions": [
       {
-        "resource": "GREETINGS",
+        "resource": "COLLABORATORS",
+        "actions": ["READ", "CREATE", "UPDATE"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILLS",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_CATEGORIES",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_ASSESSMENTS",
         "actions": ["READ", "CREATE", "UPDATE"],
         "scope": "ALL"
       }
@@ -26,8 +56,23 @@
     "label": "Admin",
     "permissions": [
       {
-        "resource": "GREETINGS",
+        "resource": "COLLABORATORS",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILLS",
         "actions": ["READ", "CREATE", "UPDATE", "DELETE", "PUBLISH"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_CATEGORIES",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE", "PUBLISH"],
+        "scope": "ALL"
+      },
+      {
+        "resource": "SKILL_ASSESSMENTS",
+        "actions": ["READ", "CREATE", "UPDATE", "DELETE"],
         "scope": "ALL"
       }
     ]

@@ -1,0 +1,108 @@
+<div class="page">
+  <div class="page-header-row">
+    <div>
+      <div class="breadcrumb"><span class="bc-home">Accueil</span><span class="bc-sep">/</span><span class="bc-current">Mon Profil</span></div>
+      <h1>Mon Profil</h1>
+      <p class="page-subtitle">Auto-évaluation de vos compétences</p>
+    </div>
+    @if (!isLoading() && totalSkills() > 0) {
+      <div class="stat-card" style="padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem">
+        <div>
+          <span style="font-size:1.5rem;font-weight:700;color:var(--text-primary)">{{ evaluatedSkills() }}</span>
+          <span class="text-muted" style="font-size:1rem"> / {{ totalSkills() }}</span>
+        </div>
+        <div>
+          <p class="text-muted text-sm mb-1">compétences évaluées</p>
+          <div class="progress-bar full"
+               role="progressbar"
+               [attr.aria-valuenow]="evaluatedSkills()"
+               [attr.aria-valuemin]="0"
+               [attr.aria-valuemax]="totalSkills()">
+            <div class="progress-fill"
+                 [style.width.%]="totalSkills() > 0 ? (evaluatedSkills() / totalSkills() * 100) : 0"></div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (error()) { <div class="alert-error">{{ error() }}</div> }
+
+  @if (isLoading()) {
+    <div class="empty-state"><p>Chargement...</p></div>
+  } @else if (grouped().length === 0) {
+    <div class="empty-state"><p>Aucune compétence disponible pour l'auto-évaluation.</p></div>
+  } @else {
+    @for (group of grouped(); track group.categoryId) {
+      <div class="section-card" aria-labelledby="profil-cat-{{ group.categoryId }}">
+        <div class="section-card-header">
+          <h2 id="profil-cat-{{ group.categoryId }}" class="section-title text-brand">{{ group.categoryName }}</h2>
+        </div>
+        <div class="section-card-body" style="display:flex;flex-direction:column;gap:0.5rem">
+          @for (a of group.assessments; track a.skillId) {
+            <div [class]="editingSkillId() === a.skillId ? 'assessment-row editing' : 'assessment-row'">
+
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:160px">
+                <span class="font-medium">{{ a.skillName }}</span>
+                @if (a.hrLevel != null) {
+                  <span class="text-muted text-sm">Évaluation RH : {{ a.hrLevel }}/5</span>
+                }
+              </div>
+
+              @if (editingSkillId() === a.skillId) {
+                <div style="display:flex;flex-direction:column;gap:0.75rem">
+                  <div style="display:flex;gap:0.5rem;flex-wrap:wrap" role="group" aria-label="Sélectionner votre niveau">
+                    @for (lvl of levelRange; track lvl) {
+                      <button type="button"
+                        [class]="editSelfLevel() === lvl ? 'level-btn selected' : 'level-btn'"
+                        (click)="editSelfLevel.set(lvl)"
+                        [attr.aria-pressed]="editSelfLevel() === lvl"
+                        [attr.aria-label]="'Niveau ' + lvl + ' — ' + levelLabel(lvl)">
+                        <span class="level-num">{{ lvl }}</span>
+                        <span class="level-label">{{ levelLabel(lvl) }}</span>
+                      </button>
+                    }
+                  </div>
+                  <div class="field">
+                    <textarea
+                      rows="2"
+                      placeholder="Commentaire (optionnel)..."
+                      style="resize:vertical"
+                      [value]="editSelfNote()"
+                      (input)="editSelfNote.set($any($event.target).value)"
+                      aria-label="Commentaire auto-évaluation">
+                    </textarea>
+                  </div>
+                  <div class="modal-actions">
+                    <button type="button" class="btn-outline" (click)="cancelEdit()">Annuler</button>
+                    <button type="button" class="btn-primary" (click)="saveSelfEval(a.skillId)" [disabled]="isSubmitting()">
+                      {{ isSubmitting() ? 'Enregistrement...' : 'Valider' }}
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="flex items-center gap-3">
+                  @if (a.selfLevel != null) {
+                    <span [class]="levelClass(a.selfLevel)">{{ a.selfLevel }}/5</span>
+                    <span class="text-muted">{{ levelLabel(a.selfLevel) }}</span>
+                    @if (a.selfNote) {
+                      <span class="text-muted cursor-help text-sm ml-1" [title]="a.selfNote">ⓘ</span>
+                    }
+                  } @else {
+                    <span class="level--none">—</span>
+                    <span class="text-muted italic">Non évalué</span>
+                  }
+                  <button type="button" class="btn-outline"
+                    (click)="startEdit(a)"
+                    [attr.aria-label]="'Évaluer ' + a.skillName">
+                    {{ a.selfLevel != null ? 'Modifier' : 'Évaluer' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

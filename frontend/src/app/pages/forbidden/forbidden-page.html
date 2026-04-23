@@ -1,8 +1,6 @@
-<section class="forbidden-card" aria-live="polite">
-  <p class="forbidden-label">Authorization</p>
-  <h1>Access denied</h1>
-  <p class="forbidden-text">
-    Your account is authenticated but does not have the required permission for this page.
-  </p>
-  <a routerLink="/hello" class="forbidden-link">Back to hello page</a>
-</section>
+<div class="forbidden-wrap">
+  <div class="forbidden-code">403</div>
+  <h1 class="forbidden-title">Accès refusé</h1>
+  <p class="forbidden-msg">Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
+  <a [routerLink]="['/dashboard']" class="btn-primary">Retour au tableau de bord</a>
+</div>

@@ -3,34 +3,45 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import type { PermissionRequirement } from './auth/auth.types';
 
-const greetingPermission: PermissionRequirement = {
-  resource: 'GREETINGS',
-  action: 'READ',
-  scope: 'ALL',
-};
+const readCollaborators: PermissionRequirement = { resource: 'COLLABORATORS', action: 'READ', scope: 'ALL' };
+const readSkills: PermissionRequirement = { resource: 'SKILLS', action: 'READ', scope: 'ALL' };
+const readSelfAssessments: PermissionRequirement = { resource: 'SKILL_ASSESSMENTS', action: 'READ', scope: 'SELF' };
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'hello', pathMatch: 'full' },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   {
-    path: 'hello',
+    path: 'dashboard',
     canActivate: [authGuard],
-    data: { permission: greetingPermission },
-    loadComponent: () =>
-      import('./pages/hello-world/hello-world').then((m) => m.HelloWorld),
+    data: { permission: readCollaborators },
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
-    path: 'good-night',
+    path: 'collaborateurs',
     canActivate: [authGuard],
-    data: { permission: greetingPermission },
-    loadComponent: () =>
-      import('./pages/good-night-world/good-night-world').then(
-        (m) => m.GoodNightWorld
-      ),
+    data: { permission: readCollaborators },
+    loadComponent: () => import('./pages/collaborateurs/collaborateurs').then((m) => m.Collaborateurs),
+  },
+  {
+    path: 'collaborateurs/:id',
+    canActivate: [authGuard],
+    data: { permission: readCollaborators },
+    loadComponent: () => import('./pages/collaborateur-detail/collaborateur-detail').then((m) => m.CollaborateurDetail),
+  },
+  {
+    path: 'competences',
+    canActivate: [authGuard],
+    data: { permission: readSkills },
+    loadComponent: () => import('./pages/competences/competences').then((m) => m.Competences),
+  },
+  {
+    path: 'mon-profil',
+    canActivate: [authGuard],
+    data: { permission: readSelfAssessments },
+    loadComponent: () => import('./pages/mon-profil/mon-profil').then((m) => m.MonProfil),
   },
   {
     path: 'forbidden',
-    loadComponent: () =>
-      import('./pages/forbidden/forbidden-page').then((m) => m.ForbiddenPage),
+    loadComponent: () => import('./pages/forbidden/forbidden-page').then((m) => m.ForbiddenPage),
   },
-  { path: '**', redirectTo: 'hello' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

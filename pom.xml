@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.finaxys</groupId>
-	<artifactId>template-app-name</artifactId>
+	<artifactId>skills-rh</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>template-app-name</name>
-	<description>Full-stack+Spring+Boot+application</description>
+	<name>skills-rh</name>
+	<description>Application RH - Suivi des compétences des collaborateurs</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -27,8 +27,8 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>25</java.version>
-		<start-class>com.finaxys.templateappname.TemplateAppNameApplication</start-class>
+		<java.version>21</java.version>
+		<start-class>com.finaxys.skillsrh.SkillsRhApplication</start-class>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -111,6 +111,11 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

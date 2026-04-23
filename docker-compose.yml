@@ -36,6 +36,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
+      APP_SECURITY_OAUTH2_ISSUER_URI: https://awskeycloak.lab-finaxys.net/realms/Template-app-Java-angular
+      APP_SECURITY_OAUTH2_AUDIENCE: template-app-spring-api
+      APP_SECURITY_OAUTH2_API_CLIENT_ID: template-app-spring-api
     ports:
       - "8080:8080"
     depends_on:

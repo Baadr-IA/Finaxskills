@@ -1,5 +1,5 @@
-import { Component, effect, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import Keycloak from 'keycloak-js';
 import {
   KEYCLOAK_EVENT_SIGNAL,
@@ -20,10 +20,30 @@ export class App {
   private readonly keycloak = inject(Keycloak);
   private readonly keycloakEventSignal = inject(KEYCLOAK_EVENT_SIGNAL);
   private readonly permissionStore = inject(PermissionStoreService);
+  private readonly router = inject(Router);
 
-  protected readonly title = 'template-app-name';
+  protected readonly title = 'skills-rh';
   protected readonly authenticated = signal(false);
   protected readonly username = signal<string | null>(null);
+  protected readonly userMenuOpen = signal(false);
+
+  protected readonly initials = computed(() => {
+    const u = this.username();
+    if (!u) return '?';
+    const parts = u.split(/[\s._-]/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[1][0]).toUpperCase()
+      : u.slice(0, 2).toUpperCase();
+  });
+
+  protected isGroupActive(routes: string[]): boolean {
+    const url = this.router.url;
+    return routes.some(r => url.startsWith(r));
+  }
+
+  protected toggleUserMenu(): void {
+    this.userMenuOpen.update(v => !v);
+  }
 
   constructor() {
     effect(() => {
@@ -81,6 +101,7 @@ export class App {
   private clearAuthState(): void {
     this.authenticated.set(false);
     this.username.set(null);
+    this.userMenuOpen.set(false);
     this.permissionStore.clear();
   }
 }
