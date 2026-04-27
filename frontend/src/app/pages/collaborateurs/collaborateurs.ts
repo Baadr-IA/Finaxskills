@@ -29,6 +29,10 @@ export class Collaborateurs {
   readonly canCreate = computed(() =>
     this.permissionStore.hasPermission({ resource: 'COLLABORATORS', action: 'CREATE', scope: 'ALL' })
   );
+  readonly canImport = computed(() =>
+    this.permissionStore.hasPermission({ resource: 'COLLABORATORS', action: 'CREATE', scope: 'ALL' }) ||
+    this.permissionStore.hasPermission({ resource: 'COLLABORATORS', action: 'UPDATE', scope: 'ALL' })
+  );
   readonly canEdit = computed(() =>
     this.permissionStore.hasPermission({ resource: 'COLLABORATORS', action: 'UPDATE', scope: 'ALL' })
   );

@@ -1,0 +1,185 @@
+<div class="page">
+  <div class="page-header-row">
+    <div>
+      <div class="breadcrumb">
+        <a class="bc-home link-brand" [routerLink]="['/collaborateurs']">Collaborateurs</a>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">Import CV</span>
+      </div>
+      <h1>Importer un CV</h1>
+      <p class="page-subtitle">Analyse Smart CV, revue RH, puis création ou mise à jour du collaborateur</p>
+    </div>
+    <a class="btn-outline" [routerLink]="['/collaborateurs']">Retour aux collaborateurs</a>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  @if (success()) {
+    <div class="alert-success">{{ success() }}</div>
+  }
+
+  <section class="section-card">
+    <div class="section-card-header">
+      <div>
+        <h2>1. Charger un CV</h2>
+        <p class="section-subtitle">Le fichier est envoyé à Smart CV pour construire un brouillon RH.</p>
+      </div>
+    </div>
+    <div class="section-card-body upload-card">
+      <input type="file" accept=".pdf,.docx" (change)="onFileChange($event)" />
+      <div class="upload-actions">
+        <button type="button" class="btn-primary" (click)="analyze()" [disabled]="!selectedFile() || isAnalyzing()">
+          {{ isAnalyzing() ? 'Analyse en cours...' : 'Analyser le CV' }}
+        </button>
+        @if (draft()) {
+          <button type="button" class="btn-outline" (click)="resetDraft()">Recommencer</button>
+        }
+      </div>
+    </div>
+  </section>
+
+  @if (draft(); as draft) {
+    <div class="stat-grid-3">
+      <div class="stat-card">
+        <div class="stat-label">Décision proposée</div>
+        <p class="stat-value stat-value--small">{{ importActionLabel() }}</p>
+        <div class="stat-trend">{{ draft.matchReason }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Source</div>
+        <p class="stat-value stat-value--small">{{ draft.source.sourceFilename }}</p>
+        <div class="stat-trend">{{ draft.source.professionalTitle ?? 'Titre non détecté' }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Compétences détectées</div>
+        <p class="stat-value">{{ draft.skills.length }}</p>
+        <div class="stat-trend">Cochez uniquement celles à synchroniser</div>
+      </div>
+    </div>
+
+    <section class="section-card">
+      <div class="section-card-header">
+        <div>
+          <h2>2. Revue RH du collaborateur</h2>
+          <p class="section-subtitle">Choisissez la cible puis corrigez les champs si nécessaire.</p>
+        </div>
+      </div>
+      <div class="section-card-body">
+        <div class="target-actions">
+          <button type="button" class="btn-outline" (click)="useNewCollaborator()">Créer un nouveau collaborateur</button>
+          <label class="field">
+            <span>Mettre à jour un collaborateur existant</span>
+            <select [ngModel]="targetCollaboratorId()" (ngModelChange)="selectExistingCollaborator($event)">
+              <option [ngValue]="null">Sélectionner...</option>
+              @for (collaborator of collaborators(); track collaborator.id) {
+                <option [ngValue]="collaborator.id">
+                  {{ collaborator.lastName }} {{ collaborator.firstName }} — {{ collaborator.email }}
+                </option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (selectedCollaborator(); as selectedCollaborator) {
+          <div class="match-banner">
+            Mise à jour ciblée: <strong>{{ selectedCollaborator.lastName }} {{ selectedCollaborator.firstName }}</strong>
+            <span class="text-muted">({{ selectedCollaborator.email }})</span>
+          </div>
+        }
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Prénom</span>
+            <input type="text" [ngModel]="draft.collaborator.firstName" (ngModelChange)="updateCollaboratorField('firstName', $event)" />
+          </label>
+          <label class="field">
+            <span>Nom</span>
+            <input type="text" [ngModel]="draft.collaborator.lastName" (ngModelChange)="updateCollaboratorField('lastName', $event)" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" [ngModel]="draft.collaborator.email" (ngModelChange)="updateCollaboratorField('email', $event)" />
+          </label>
+          <label class="field">
+            <span>Poste</span>
+            <input type="text" [ngModel]="draft.collaborator.jobTitle" (ngModelChange)="updateCollaboratorField('jobTitle', $event)" />
+          </label>
+          <label class="field field--full">
+            <span>Keycloak ID</span>
+            <input type="text" [ngModel]="draft.collaborator.keycloakId" (ngModelChange)="updateCollaboratorField('keycloakId', $event)" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-card-header">
+        <div>
+          <h2>3. Revue RH des compétences</h2>
+          <p class="section-subtitle">Vous pouvez exclure, renommer ou recatégoriser chaque compétence avant synchronisation.</p>
+        </div>
+      </div>
+      <div class="section-card-body">
+        @if (draft.skills.length === 0) {
+          <div class="empty-row">Aucune compétence exploitable n'a été détectée.</div>
+        } @else {
+          <div class="skills-list">
+            @for (skill of draft.skills; track $index) {
+              <article class="skill-card">
+                <div class="skill-card-header">
+                  <label class="checkbox-row">
+                    <input type="checkbox" [ngModel]="skill.selected" (ngModelChange)="updateSkill($index, 'selected', $event)" />
+                    <span>Synchroniser cette compétence</span>
+                  </label>
+                  <span class="badge" [class.badge-green]="skill.resolution === 'REUSE'" [class.badge-orange]="skill.resolution === 'CREATE'">
+                    {{ skill.resolution === 'REUSE' ? 'Réutilisée' : 'Créée' }}
+                  </span>
+                </div>
+
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Compétence</span>
+                    <input type="text" [ngModel]="skill.skillName" (ngModelChange)="updateSkill($index, 'skillName', $event)" />
+                  </label>
+                  <label class="field">
+                    <span>Catégorie</span>
+                    <input type="text" [ngModel]="skill.categoryName" (ngModelChange)="updateSkill($index, 'categoryName', $event)" />
+                  </label>
+                  <label class="field">
+                    <span>Niveau RH proposé</span>
+                    <select [ngModel]="skill.hrLevel" (ngModelChange)="updateSkill($index, 'hrLevel', $event)">
+                      <option [ngValue]="null">Aucun</option>
+                      @for (level of levelRange; track level) {
+                        <option [ngValue]="level">{{ level }} — {{ levelLabel(level) }}</option>
+                      }
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>Niveau Smart CV</span>
+                    <input type="text" [ngModel]="skill.sourceLevel ?? '—'" disabled />
+                  </label>
+                  <label class="field">
+                    <span>Expérience estimée</span>
+                    <input type="text" [ngModel]="skill.yearsExperience != null ? skill.yearsExperience + ' an(s)' : '—'" disabled />
+                  </label>
+                  <label class="field field--full">
+                    <span>Note RH</span>
+                    <textarea rows="3" [ngModel]="skill.hrNote" (ngModelChange)="updateSkill($index, 'hrNote', $event)"></textarea>
+                  </label>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <div class="page-actions">
+      <button type="button" class="btn-primary" (click)="commit()" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Enregistrement...' : 'Valider et synchroniser' }}
+      </button>
+    </div>
+  }
+</div>

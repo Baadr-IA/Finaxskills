@@ -1,0 +1,122 @@
+.upload-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.alert-success {
+  background: var(--green-bg);
+  border: 1px solid #86efac;
+  color: var(--green-text);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.upload-actions,
+.page-actions,
+.target-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field span {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-md);
+  font: inherit;
+  background: white;
+  color: var(--text-body);
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.match-banner {
+  margin: 1rem 0;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--brand-bg);
+  color: var(--text-body);
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skill-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  background: #fcfcfd;
+}
+
+.skill-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--text-body);
+}
+
+.checkbox-row input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.stat-value--small {
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field--full {
+    grid-column: auto;
+  }
+
+  .skill-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

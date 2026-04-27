@@ -5,6 +5,8 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +18,8 @@ import java.util.Map;
 
 @RestControllerAdvice(annotations = RestController.class)
 public class ApiExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException exception, HttpServletRequest request) {
@@ -74,11 +78,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpectedException(Exception exception, HttpServletRequest request) {
+        LOGGER.error("Unexpected API error on {}", request.getRequestURI(), exception);
         return problemDetail(
             request,
             HttpStatus.INTERNAL_SERVER_ERROR,
             "internal-server-error",
-            "An unexpected error occurred"
+            "Unexpected API error: " + summarizeException(exception)
         );
     }
 
@@ -91,5 +96,21 @@ public class ApiExceptionHandler {
             ApiException.problemDetail(status, problemTypeId, detail, errors),
             request.getRequestURI()
         );
+    }
+
+    private String summarizeException(Exception exception) {
+        Throwable current = exception;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        String message = current.getMessage();
+        if (message == null || message.isBlank()) {
+            return current.getClass().getSimpleName();
+        }
+        String singleLine = message.replaceAll("\\s+", " ").trim();
+        if (singleLine.length() > 220) {
+            singleLine = singleLine.substring(0, 217) + "...";
+        }
+        return current.getClass().getSimpleName() + " - " + singleLine;
     }
 }

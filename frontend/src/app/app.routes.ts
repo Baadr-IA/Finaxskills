@@ -22,6 +22,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/collaborateurs/collaborateurs').then((m) => m.Collaborateurs),
   },
   {
+    path: 'collaborateurs/import-cv',
+    canActivate: [authGuard],
+    data: { permission: readCollaborators },
+    loadComponent: () => import('./pages/import-cv/import-cv').then((m) => m.ImportCv),
+  },
+  {
     path: 'collaborateurs/:id',
     canActivate: [authGuard],
     data: { permission: readCollaborators },

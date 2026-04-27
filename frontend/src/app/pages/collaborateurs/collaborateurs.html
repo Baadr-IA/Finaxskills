@@ -5,9 +5,14 @@
       <h1>Collaborateurs</h1>
       <p class="page-subtitle">Consultez la liste des collaborateurs et leur progression</p>
     </div>
-    @if (canCreate()) {
-      <button type="button" class="btn-create" (click)="openCreate()">+ Nouveau collaborateur</button>
-    }
+    <div class="upload-actions">
+      @if (canImport()) {
+        <a class="btn-outline" [routerLink]="['/collaborateurs/import-cv']">Importer un CV</a>
+      }
+      @if (canCreate()) {
+        <button type="button" class="btn-create" (click)="openCreate()">+ Nouveau collaborateur</button>
+      }
+    </div>
   </div>
 
   @if (error()) { <div class="alert-error">{{ error() }}</div> }

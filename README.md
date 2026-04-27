@@ -105,6 +105,37 @@ This runs unit tests using Vitest.
 
 ---
 
+## Smart CV integration
+
+Finaxskills can now orchestrate a CV import flow backed by the **Smart CV** API.
+
+### Configuration
+
+Set the Smart CV connection through environment variables:
+
+```bash
+APP_SMART_CV_BASE_URL=http://localhost:8000
+APP_SMART_CV_API_KEY=your-api-key-if-required
+```
+
+If Smart CV runs locally with its API key disabled, only `APP_SMART_CV_BASE_URL` is needed.
+
+### RH flow
+
+1. Open **`/collaborateurs/import-cv`**
+2. Upload a PDF or DOCX CV
+3. Review the extracted collaborator data and detected skills
+4. Confirm the import to create or update the collaborator and HR skill assessments
+
+### Backend endpoints
+
+- `POST /api/cv-imports/draft` — send a CV and get an RH review draft
+- `POST /api/cv-imports/commit` — validate the reviewed draft and persist the result
+
+The import flow reuses the existing collaborator, skills, categories, and assessment models already present in Finaxskills.
+
+---
+
 ## Pages & API
 
 | Page | Route | Backend endpoint |
