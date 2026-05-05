@@ -1,0 +1,130 @@
+<div class="page">
+  <div class="page-header-row">
+    <div>
+      <h1>Recherche par poste</h1>
+      <p class="page-subtitle">Trouvez les meilleurs candidats pour un intitulé de poste — avec analyse du skill gap</p>
+    </div>
+  </div>
+
+  <!-- Formulaire de recherche -->
+  <section class="section-card">
+    <div class="section-card-header">
+      <h2>Critères de recherche</h2>
+    </div>
+    <div class="section-card-body search-card">
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Ex : DevOps, Data Engineer, Backend Java…"
+        [(ngModel)]="jobTitle"
+        (keyup.enter)="search()"
+      />
+      <select class="results-select" [(ngModel)]="maxResults">
+        <option [value]="3">3 résultats</option>
+        <option [value]="5">5 résultats</option>
+        <option [value]="10">10 résultats</option>
+      </select>
+      <button class="btn-primary" (click)="search()" [disabled]="loading() || !jobTitle.trim()">
+        @if (loading()) { Recherche en cours… } @else { Rechercher }
+      </button>
+    </div>
+  </section>
+
+  <!-- Erreur -->
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  <!-- Résultats -->
+  @if (result(); as res) {
+    <section class="section-card">
+      <div class="section-card-header">
+        <div>
+          <div class="results-header">
+            <span class="poste-label">{{ res.jobTitle }}</span>
+            @if (!res.knownPoste) {
+              <span class="badge badge-yellow badge-unknown-poste">Poste non référencé — recherche libre</span>
+            }
+          </div>
+          <p class="section-subtitle">{{ res.candidates.length }} candidat(s) trouvé(s)</p>
+        </div>
+      </div>
+
+      @if (res.requiredSkills.length > 0) {
+        <div class="required-skills-row">
+          <span class="label-required">Compétences attendues :</span>
+          @for (skill of res.requiredSkills; track skill) {
+            <span class="badge badge-blue">{{ skill }}</span>
+          }
+        </div>
+      }
+
+      <div class="section-card-body">
+        @if (res.candidates.length === 0) {
+          <p class="no-results">Aucun candidat trouvé pour ce poste.</p>
+        } @else {
+          <div class="candidates-list">
+            @for (candidate of res.candidates; track candidate.candidateId) {
+              <div class="candidate-card">
+                <div class="candidate-header">
+                  <div class="candidate-name">{{ candidate.name || candidate.candidateId }}</div>
+                  @if (candidate.jobTitle) {
+                    <div class="candidate-jobtitle">{{ candidate.jobTitle }}</div>
+                  }
+                  <a class="candidate-link" [routerLink]="['/collaborateurs', candidate.candidateId]">
+                    Voir le profil →
+                  </a>
+                </div>
+
+                <!-- Scores -->
+                <div class="scores-row">
+                  <div class="score-block">
+                    <span class="score-label">Couverture skills</span>
+                    <div class="bar-track">
+                      <div
+                        class="bar-fill"
+                        [class]="coverageBarClass(candidate)"
+                        [style.width.%]="coveragePercent(candidate)"
+                      ></div>
+                    </div>
+                    <span class="score-value">{{ coveragePercent(candidate) }}%</span>
+                  </div>
+                  <div class="score-block">
+                    <span class="score-label">Pertinence RAG</span>
+                    <div class="bar-track">
+                      <div
+                        class="bar-fill bar-blue"
+                        [style.width.%]="relevancePercent(candidate)"
+                      ></div>
+                    </div>
+                    <span class="score-value">{{ relevancePercent(candidate) }}%</span>
+                  </div>
+                </div>
+
+                <!-- Skills matched / missing -->
+                <div class="skills-row">
+                  @if (candidate.matchedSkills.length > 0) {
+                    <div class="skills-group">
+                      <span class="skills-group-label matched">✓ Maîtrisées</span>
+                      @for (skill of candidate.matchedSkills; track skill) {
+                        <span class="badge-matched">{{ skill }}</span>
+                      }
+                    </div>
+                  }
+                  @if (candidate.missingSkills.length > 0) {
+                    <div class="skills-group">
+                      <span class="skills-group-label missing">✗ Manquantes</span>
+                      @for (skill of candidate.missingSkills; track skill) {
+                        <span class="badge-missing">{{ skill }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>
