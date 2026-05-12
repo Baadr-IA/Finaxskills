@@ -48,6 +48,8 @@ public class DataInitializer implements ApplicationRunner {
         SkillCategory softSkills = categoryRepository.save(new SkillCategory("Soft Skills", "Transversal human skills"));
 
         // ── Skills ───────────────────────────────────────────────────────────
+        Skill javaLanguage = skillRepository.save(new Skill("Java", "Java programming language", java));
+        Skill pythonLanguage = skillRepository.save(new Skill("Python", "Python programming language", java));
         Skill springBoot = skillRepository.save(new Skill("Spring Boot", "Spring Boot framework", java));
         Skill hibernate = skillRepository.save(new Skill("Hibernate / JPA", "ORM for relational databases", java));
         Skill angular = skillRepository.save(new Skill("Angular", "Angular 21 SPA framework", frontend));
@@ -71,17 +73,23 @@ public class DataInitializer implements ApplicationRunner {
 
         // ── Assessments (self + HR) ───────────────────────────────────────────
         addAssessment(alice, springBoot, 5, "My core skill", 5, "Expert level confirmed");
+        addAssessment(alice, javaLanguage, 4, "Strong Java backend experience", 4, "Reliable on Java projects");
+        addAssessment(alice, pythonLanguage, 2, "Basic scripting only", 2, "Needs practice on Python");
         addAssessment(alice, hibernate, 4, "Comfortable with complex mappings", 4, null);
         addAssessment(alice, angular, 2, "Learning in progress", 2, "Beginner — encourage training");
         addAssessment(alice, communication, 4, null, 5, "Excellent communicator");
 
         addAssessment(bob, angular, 5, "Main framework", 4, "Strong skills");
         addAssessment(bob, typescript, 4, "Daily use", 4, null);
+        addAssessment(bob, javaLanguage, 3, "Comfortable with Java APIs", 3, null);
+        addAssessment(bob, pythonLanguage, 2, "Occasional automation", 2, null);
         addAssessment(bob, springBoot, 3, "I can write REST APIs", 3, null);
         addAssessment(bob, react, 3, "Side projects", null, null);
 
         addAssessment(claire, docker, 5, "Expert", 5, "Container specialist");
         addAssessment(claire, kubernetes, 4, "Production experience", 4, "K8s certified");
+        addAssessment(claire, javaLanguage, 2, "Can read Java services", 2, null);
+        addAssessment(claire, pythonLanguage, 4, "Uses Python for tooling and automation", 4, "Very autonomous on Python automation");
         addAssessment(claire, leadership, 3, null, 4, "Good team lead potential");
     }
 

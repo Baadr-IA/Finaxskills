@@ -1,0 +1,496 @@
+{
+  "skill": "Python",
+  "scale": {
+    "1": "Débutant",
+    "2": "Novice",
+    "3": "Intermédiaire",
+    "4": "Avancé",
+    "5": "Expert"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "label": "Débutant",
+      "description": "Connaît la syntaxe de base, peut écrire des scripts simples.",
+      "topics": [
+        {
+          "name": "Syntaxe de base",
+          "attendus": [
+            "Déclarer et utiliser des variables (int, float, str, bool)",
+            "Utiliser les opérateurs arithmétiques et de comparaison",
+            "Écrire des conditions if / elif / else",
+            "Écrire des boucles for et while",
+            "Utiliser print() et input()"
+          ],
+          "exemple_question": {
+            "enonce": "Que vaut x après l'exécution de ce code ?\nx = 5\nif x > 3:\n    x = x * 2\nelif x == 5:\n    x = 0",
+            "choix_A": "0",
+            "choix_B": "5",
+            "choix_C": "10",
+            "choix_D": "Erreur",
+            "bonne_reponse": "C",
+            "explication": "x > 3 est vrai dès le départ, donc x = 5 * 2 = 10. Le elif n'est jamais évalué."
+          }
+        },
+        {
+          "name": "Fonctions",
+          "attendus": [
+            "Définir une fonction avec def",
+            "Passer des arguments et retourner une valeur",
+            "Comprendre la portée locale vs globale"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle affirmation est correcte concernant une variable définie dans une fonction ?",
+            "choix_A": "Elle est accessible partout dans le programme",
+            "choix_B": "Elle est locale à la fonction et n'existe pas en dehors",
+            "choix_C": "Elle remplace automatiquement une variable globale du même nom",
+            "choix_D": "Elle persiste entre deux appels de la fonction",
+            "bonne_reponse": "B",
+            "explication": "Une variable définie dans une fonction a une portée locale. Elle n'est pas accessible hors de la fonction et ne persiste pas entre les appels."
+          }
+        },
+        {
+          "name": "Structures de données basiques",
+          "attendus": [
+            "Créer et indexer des listes",
+            "Utiliser append, remove, len sur une liste",
+            "Créer un dictionnaire simple et accéder à ses valeurs"
+          ],
+          "exemple_question": {
+            "enonce": "Que retourne ce code ?\nma_liste = ['a', 'b', 'c', 'd']\nprint(ma_liste[2])",
+            "choix_A": "'a'",
+            "choix_B": "'b'",
+            "choix_C": "'c'",
+            "choix_D": "'d'",
+            "bonne_reponse": "C",
+            "explication": "Les indices Python commencent à 0. L'index 2 correspond au 3ème élément, soit 'c'."
+          }
+        },
+        {
+          "name": "Chaînes de caractères",
+          "attendus": [
+            "Concaténer des chaînes",
+            "Utiliser les f-strings",
+            "Utiliser split(), strip(), upper(), lower()"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle méthode permet de découper une chaîne en liste de mots ?",
+            "choix_A": "strip()",
+            "choix_B": "split()",
+            "choix_C": "join()",
+            "choix_D": "slice()",
+            "bonne_reponse": "B",
+            "explication": "split() découpe une chaîne selon un séparateur (espace par défaut) et retourne une liste. strip() supprime les espaces en bordure, join() fait l'inverse de split(), slice() n'est pas une méthode de str."
+          }
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "label": "Novice",
+      "description": "Manipule les structures de données courantes, commence la POO et gère les fichiers.",
+      "topics": [
+        {
+          "name": "Structures de données",
+          "attendus": [
+            "Utiliser tuple, set, dict de façon appropriée",
+            "Comprendre la différence mutabilité / immutabilité",
+            "Itérer sur un dict (keys, values, items)",
+            "Utiliser des list comprehensions simples"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle structure de données Python ne peut pas contenir de doublons ?",
+            "choix_A": "list",
+            "choix_B": "tuple",
+            "choix_C": "set",
+            "choix_D": "dict (valeurs)",
+            "bonne_reponse": "C",
+            "explication": "Un set n'accepte que des valeurs uniques, les doublons sont automatiquement ignorés. list et tuple peuvent avoir des doublons. Les valeurs d'un dict peuvent aussi être dupliquées."
+          }
+        },
+        {
+          "name": "Gestion des erreurs",
+          "attendus": [
+            "Utiliser try / except / finally",
+            "Lever une exception avec raise",
+            "Distinguer les exceptions courantes (ValueError, TypeError, KeyError)"
+          ],
+          "exemple_question": {
+            "enonce": "Que se passe-t-il si une exception n'est pas attrapée par le bloc except ?",
+            "choix_A": "Python l'ignore silencieusement",
+            "choix_B": "Le programme continue à la ligne suivante",
+            "choix_C": "L'exception se propage et peut faire planter le programme",
+            "choix_D": "Python affiche un warning mais continue",
+            "bonne_reponse": "C",
+            "explication": "Une exception non attrapée remonte la pile d'appels. Si aucun gestionnaire ne la traite, le programme s'arrête et affiche le traceback."
+          }
+        },
+        {
+          "name": "Fichiers I/O",
+          "attendus": [
+            "Lire et écrire un fichier texte avec open() et le context manager with",
+            "Lire un fichier CSV avec le module csv",
+            "Gérer les modes r, w, a"
+          ],
+          "exemple_question": {
+            "enonce": "Quel mode d'ouverture de fichier faut-il utiliser pour ajouter du contenu sans écraser l'existant ?",
+            "choix_A": "r",
+            "choix_B": "w",
+            "choix_C": "a",
+            "choix_D": "x",
+            "bonne_reponse": "C",
+            "explication": "'a' (append) ouvre le fichier en écriture à la fin. 'r' est lecture seule, 'w' écrase le contenu, 'x' crée un fichier et échoue s'il existe déjà."
+          }
+        },
+        {
+          "name": "Modules et imports",
+          "attendus": [
+            "Importer des modules standards (os, sys, math, random, datetime)",
+            "Utiliser from module import ...",
+            "Créer son propre module"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle syntaxe permet d'importer uniquement la fonction sqrt du module math ?",
+            "choix_A": "import math.sqrt",
+            "choix_B": "from math import sqrt",
+            "choix_C": "include math.sqrt",
+            "choix_D": "import sqrt from math",
+            "bonne_reponse": "B",
+            "explication": "'from math import sqrt' importe uniquement sqrt dans l'espace de noms local. Les autres syntaxes sont invalides en Python."
+          }
+        },
+        {
+          "name": "POO — bases",
+          "attendus": [
+            "Définir une classe avec __init__",
+            "Créer des attributs d'instance et des méthodes",
+            "Instancier et utiliser un objet"
+          ],
+          "exemple_question": {
+            "enonce": "Dans une classe Python, quel est le rôle du paramètre 'self' dans une méthode ?",
+            "choix_A": "C'est un mot-clé réservé obligatoire sans signification particulière",
+            "choix_B": "Il fait référence à l'instance courante de la classe",
+            "choix_C": "Il représente la classe elle-même",
+            "choix_D": "Il est utilisé uniquement dans __init__",
+            "bonne_reponse": "B",
+            "explication": "'self' désigne l'instance sur laquelle la méthode est appelée. Ce n'est pas un mot-clé réservé (on pourrait l'appeler autrement) mais c'est la convention universelle."
+          }
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "label": "Intermédiaire",
+      "description": "Maîtrise la POO, les itérateurs, les décorateurs simples et les libs de data courantes.",
+      "topics": [
+        {
+          "name": "POO avancée",
+          "attendus": [
+            "Mettre en œuvre l'héritage et la surcharge de méthodes",
+            "Utiliser les méthodes spéciales (__str__, __repr__, __eq__, __len__)",
+            "Comprendre le MRO (Method Resolution Order)",
+            "Utiliser @property, @staticmethod, @classmethod"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle affirmation est correcte sur @classmethod ?",
+            "choix_A": "Il reçoit l'instance en premier argument",
+            "choix_B": "Il reçoit la classe en premier argument via 'cls'",
+            "choix_C": "Il ne peut pas accéder aux attributs de la classe",
+            "choix_D": "Il est identique à @staticmethod",
+            "bonne_reponse": "B",
+            "explication": "@classmethod reçoit la classe (cls) comme premier argument, pas l'instance. @staticmethod ne reçoit ni l'instance ni la classe."
+          }
+        },
+        {
+          "name": "Itérateurs et générateurs",
+          "attendus": [
+            "Comprendre le protocole itérateur (__iter__, __next__)",
+            "Écrire un générateur avec yield",
+            "Utiliser des expressions génératrices"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle est la différence principale entre un itérateur et un générateur en Python ?",
+            "choix_A": "Un générateur ne peut être parcouru qu'une seule fois, un itérateur peut l'être plusieurs fois",
+            "choix_B": "Un générateur utilise yield et produit les valeurs à la demande, un itérateur implémente __iter__ et __next__",
+            "choix_C": "Un itérateur est plus rapide qu'un générateur",
+            "choix_D": "Il n'y a aucune différence, ce sont des synonymes",
+            "bonne_reponse": "B",
+            "explication": "Un générateur est un cas particulier d'itérateur créé avec yield. Il produit les valeurs lazily. Tout générateur est un itérateur, mais pas l'inverse."
+          }
+        },
+        {
+          "name": "Décorateurs",
+          "attendus": [
+            "Comprendre le principe de closure",
+            "Écrire un décorateur simple (sans argument)",
+            "Utiliser functools.wraps"
+          ],
+          "exemple_question": {
+            "enonce": "Pourquoi utilise-t-on functools.wraps dans un décorateur ?",
+            "choix_A": "Pour améliorer les performances du décorateur",
+            "choix_B": "Pour que la fonction décorée conserve son __name__ et __doc__ d'origine",
+            "choix_C": "Pour permettre au décorateur de recevoir des arguments",
+            "choix_D": "Pour rendre le décorateur compatible Python 2",
+            "bonne_reponse": "B",
+            "explication": "Sans functools.wraps, la fonction décorée prendrait le nom et la docstring de la fonction wrapper. wraps copie les métadonnées de la fonction originale."
+          }
+        },
+        {
+          "name": "Manipulation de données",
+          "attendus": [
+            "Utiliser map(), filter(), zip(), enumerate()",
+            "Écrire des dict/set comprehensions",
+            "Trier avec sorted() et key=lambda",
+            "Utiliser collections (Counter, defaultdict, namedtuple)"
+          ],
+          "exemple_question": {
+            "enonce": "Que retourne sorted([3,1,2], key=lambda x: -x) ?",
+            "choix_A": "[1, 2, 3]",
+            "choix_B": "[3, 2, 1]",
+            "choix_C": "[-3, -2, -1]",
+            "choix_D": "[-1, -2, -3]",
+            "bonne_reponse": "B",
+            "explication": "La clé lambda x: -x inverse l'ordre naturel. sorted trie par valeur croissante de la clé, donc -3 < -2 < -1, ce qui donne [3, 2, 1] en valeurs originales."
+          }
+        },
+        {
+          "name": "Gestion de packages",
+          "attendus": [
+            "Créer et utiliser un environnement virtuel (venv)",
+            "Installer des dépendances avec pip",
+            "Structurer un projet avec __init__.py"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle commande crée un environnement virtuel nommé 'env' en Python 3 ?",
+            "choix_A": "python -m virtualenv env",
+            "choix_B": "python -m venv env",
+            "choix_C": "pip create env",
+            "choix_D": "python --venv env",
+            "bonne_reponse": "B",
+            "explication": "'python -m venv env' est la commande standard depuis Python 3.3. virtualenv est un outil tiers (non inclus dans la stdlib). Les autres syntaxes n'existent pas."
+          }
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "label": "Avancé",
+      "description": "Écrit du code Pythonique, performant, testé et sécurisé. À l'aise avec l'asynchrone et les métaclasses.",
+      "topics": [
+        {
+          "name": "Programmation fonctionnelle & avancée",
+          "attendus": [
+            "Utiliser functools (partial, lru_cache, reduce)",
+            "Écrire des décorateurs paramétrés",
+            "Maîtriser les context managers (contextlib, __enter__/__exit__)",
+            "Comprendre et utiliser les dataclasses"
+          ],
+          "exemple_question": {
+            "enonce": "Que fait @lru_cache sur une fonction ?",
+            "choix_A": "Elle s'exécute en arrière-plan",
+            "choix_B": "Elle met en cache les résultats selon les arguments pour éviter les recalculs",
+            "choix_C": "Elle limite le nombre d'appels par seconde",
+            "choix_D": "Elle persiste les résultats sur disque",
+            "bonne_reponse": "B",
+            "explication": "@lru_cache (Least Recently Used) mémoïse les résultats. Si la fonction est appelée avec les mêmes arguments, le résultat en cache est retourné sans recalcul."
+          }
+        },
+        {
+          "name": "Programmation asynchrone",
+          "attendus": [
+            "Comprendre la boucle d'événements asyncio",
+            "Écrire des coroutines avec async/await",
+            "Utiliser asyncio.gather et asyncio.create_task",
+            "Distinguer I/O-bound vs CPU-bound et choisir la bonne approche"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle affirmation est vraie sur asyncio.gather() ?",
+            "choix_A": "Il exécute les coroutines en parallèle sur plusieurs threads",
+            "choix_B": "Il exécute les coroutines de façon concurrente dans la même boucle d'événements",
+            "choix_C": "Il bloque jusqu'à ce que la première coroutine termine",
+            "choix_D": "Il ne peut pas gérer les exceptions des coroutines",
+            "bonne_reponse": "B",
+            "explication": "asyncio.gather() exécute plusieurs coroutines concurrentiellement (pas en parallèle au sens OS) dans la même boucle d'événements et attend qu'elles finissent toutes."
+          }
+        },
+        {
+          "name": "Tests",
+          "attendus": [
+            "Écrire des tests unitaires avec pytest",
+            "Utiliser les fixtures pytest",
+            "Mocker des dépendances avec unittest.mock",
+            "Mesurer la couverture de code avec pytest-cov"
+          ],
+          "exemple_question": {
+            "enonce": "Dans pytest, à quoi sert une fixture marquée @pytest.fixture(scope='session') ?",
+            "choix_A": "Elle est recréée avant chaque test",
+            "choix_B": "Elle est créée une seule fois pour toute la session de tests",
+            "choix_C": "Elle s'applique uniquement aux tests du même fichier",
+            "choix_D": "Elle ne peut pas être partagée entre plusieurs tests",
+            "bonne_reponse": "B",
+            "explication": "scope='session' signifie que la fixture est instanciée une fois pour toute la session. scope='function' (défaut) la recrée pour chaque test, scope='module' pour chaque fichier."
+          }
+        },
+        {
+          "name": "Performance & profiling",
+          "attendus": [
+            "Utiliser timeit et cProfile",
+            "Comprendre quand utiliser numpy vs listes natives",
+            "Appliquer @lru_cache et identifier les cas d'usage",
+            "Comprendre le GIL et ses implications"
+          ],
+          "exemple_question": {
+            "enonce": "Pourquoi le GIL (Global Interpreter Lock) limite-t-il le threading en Python ?",
+            "choix_A": "Il empêche de créer plus de 10 threads simultanément",
+            "choix_B": "Il ne permet qu'à un seul thread d'exécuter du bytecode Python à la fois",
+            "choix_C": "Il ralentit les opérations I/O en mode multithreadé",
+            "choix_D": "Il est actif uniquement sur Windows",
+            "bonne_reponse": "B",
+            "explication": "Le GIL garantit qu'un seul thread exécute du bytecode Python à la fois. Cela limite le parallélisme CPU. Pour les tâches CPU-bound, multiprocessing est préférable au threading."
+          }
+        },
+        {
+          "name": "Typage statique",
+          "attendus": [
+            "Utiliser les annotations de type (PEP 484)",
+            "Utiliser le module typing (List, Dict, Optional, Union, Callable, TypeVar)",
+            "Configurer et utiliser mypy",
+            "Écrire des Protocol / TypedDict"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle annotation de type représente un paramètre qui peut être un int ou None ?",
+            "choix_A": "Union[int]",
+            "choix_B": "Nullable[int]",
+            "choix_C": "Optional[int]",
+            "choix_D": "int | None | Optional",
+            "bonne_reponse": "C",
+            "explication": "Optional[int] est équivalent à Union[int, None]. C'est la façon idiomatique d'indiquer qu'une valeur peut être un int ou None. Depuis Python 3.10, on peut aussi écrire int | None."
+          }
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "label": "Expert",
+      "description": "Maîtrise les internals CPython, conçoit des frameworks, optimise à bas niveau et guide les équipes.",
+      "topics": [
+        {
+          "name": "Internals CPython",
+          "attendus": [
+            "Expliquer le fonctionnement du bytecode Python (module dis)",
+            "Comprendre la gestion mémoire et le garbage collector (gc, reference counting)",
+            "Expliquer le GIL et ses alternatives (multiprocessing, C extensions)",
+            "Comprendre le cycle de vie d'un objet Python"
+          ],
+          "exemple_question": {
+            "enonce": "Que permet de faire le module dis en Python ?",
+            "choix_A": "Distribuer un package sur PyPI",
+            "choix_B": "Désassembler le bytecode d'une fonction pour voir les instructions CPython",
+            "choix_C": "Mesurer le temps d'exécution d'un code",
+            "choix_D": "Déboguer pas à pas une fonction",
+            "bonne_reponse": "B",
+            "explication": "dis.dis(func) affiche les instructions bytecode générées par CPython pour une fonction. C'est utile pour comprendre les optimisations et le fonctionnement interne de l'interpréteur."
+          }
+        },
+        {
+          "name": "Métaclasses & descripteurs",
+          "attendus": [
+            "Écrire une métaclasse pour modifier le comportement de la création de classe",
+            "Implémenter un descripteur (__get__, __set__, __delete__)",
+            "Utiliser __slots__ pour optimiser la mémoire",
+            "Comprendre __init_subclass__ et __class_getitem__"
+          ],
+          "exemple_question": {
+            "enonce": "Quel est le rôle de __slots__ dans une classe Python ?",
+            "choix_A": "Définir les méthodes publiques autorisées",
+            "choix_B": "Restreindre les attributs d'instance et réduire la consommation mémoire",
+            "choix_C": "Empêcher l'héritage de la classe",
+            "choix_D": "Définir l'ordre des attributs dans __init__",
+            "bonne_reponse": "B",
+            "explication": "__slots__ remplace le __dict__ par un tableau fixe, ce qui réduit la mémoire et accélère l'accès aux attributs. En contrepartie, on ne peut pas ajouter d'attributs non déclarés."
+          }
+        },
+        {
+          "name": "Design patterns & architecture",
+          "attendus": [
+            "Implémenter les patterns GoF en Python (Singleton, Factory, Observer, Strategy…)",
+            "Concevoir une API publique avec des ABCs (Abstract Base Classes)",
+            "Appliquer les principes SOLID en Python",
+            "Écrire un plugin system extensible"
+          ],
+          "exemple_question": {
+            "enonce": "Quelle interface Python doit implémenter une classe pour être utilisée comme Abstract Base Class ?",
+            "choix_A": "Hériter de object et définir __abstract__ = True",
+            "choix_B": "Hériter de abc.ABC et décorer les méthodes abstraites avec @abstractmethod",
+            "choix_C": "Définir une méthode __interface__ dans la classe",
+            "choix_D": "Utiliser le mot-clé abstract devant la définition de classe",
+            "bonne_reponse": "B",
+            "explication": "En Python, on crée une ABC en héritant de abc.ABC et en marquant les méthodes avec @abstractmethod. Toute sous-classe devra implémenter ces méthodes pour pouvoir être instanciée."
+          }
+        },
+        {
+          "name": "Concurrence avancée",
+          "attendus": [
+            "Comparer threading, multiprocessing et asyncio selon le cas d'usage",
+            "Utiliser concurrent.futures (ThreadPoolExecutor, ProcessPoolExecutor)",
+            "Écrire du code thread-safe avec Lock, Semaphore, Queue",
+            "Profiler et déboguer des race conditions"
+          ],
+          "exemple_question": {
+            "enonce": "Pour un traitement CPU-intensif en Python, quelle approche donne un vrai parallélisme ?",
+            "choix_A": "threading.Thread, car les threads s'exécutent en parallèle",
+            "choix_B": "asyncio, car il utilise plusieurs cœurs CPU",
+            "choix_C": "multiprocessing.Process, car chaque processus a son propre GIL",
+            "choix_D": "concurrent.futures.ThreadPoolExecutor, car il contourne le GIL",
+            "bonne_reponse": "C",
+            "explication": "Le GIL bloque le vrai parallélisme des threads pour le code Python CPU-bound. multiprocessing crée des processus séparés, chacun avec son propre interpréteur et GIL, permettant un vrai parallélisme."
+          }
+        },
+        {
+          "name": "Extensions C / Cython / Packaging avancé",
+          "attendus": [
+            "Écrire une extension C simple via ctypes ou cffi",
+            "Comprendre les bases de Cython pour optimiser du code critique",
+            "Publier un package sur PyPI (pyproject.toml, build, twine)",
+            "Gérer des builds complexes avec setuptools ou hatch"
+          ],
+          "exemple_question": {
+            "enonce": "Dans pyproject.toml, quelle section déclare les dépendances obligatoires d'un package ?",
+            "choix_A": "[tool.pip]",
+            "choix_B": "[build-system]",
+            "choix_C": "[project] → dependencies",
+            "choix_D": "[tool.setuptools] → install_requires",
+            "bonne_reponse": "C",
+            "explication": "Selon PEP 621, les dépendances obligatoires se déclarent dans [project] sous la clé 'dependencies'. [build-system] déclare les outils de build, pas les dépendances du projet."
+          }
+        }
+      ]
+    }
+  ],
+  "test_generation_instructions": {
+    "format": "QCM uniquement",
+    "structure_question": {
+      "champs": ["id", "niveau", "topic", "attendu_cible", "enonce", "choix_A", "choix_B", "choix_C", "choix_D", "bonne_reponse", "explication"],
+      "nb_choix": 4,
+      "nb_bonnes_reponses": 1
+    },
+    "nb_questions_par_niveau": 10,
+    "types_de_questions": [
+      "Lecture de code : 'Que retourne ce code ?'",
+      "Complétion : 'Quel mot-clé / méthode manque ?'",
+      "Concept : 'Quelle affirmation est correcte sur X ?'",
+      "Erreur : 'Pourquoi ce code lève-t-il une exception ?'",
+      "Meilleure pratique : 'Quelle est la façon Pythonique de faire X ?'"
+    ],
+    "consignes": [
+      "Chaque question cible exactement un attendu listé dans le niveau concerné",
+      "Les distracteurs (mauvaises réponses) doivent être plausibles et couvrir des erreurs fréquentes",
+      "Inclure au moins 2 questions avec un extrait de code par niveau",
+      "Niveaux 1-2 : stdlib Python uniquement, aucune lib tierce",
+      "Niveaux 3-4 : libs autorisées (collections, asyncio, pytest…)",
+      "Niveau 5 : au moins 2 questions sur les internals (bytecode, GIL, métaclasses)",
+      "Chaque série doit contenir au moins 1 piège classique Python (mutabilité, scope, valeur par défaut mutable…)",
+      "L'explication doit justifier la bonne réponse ET pourquoi les autres sont fausses"
+    ]
+  }
+}

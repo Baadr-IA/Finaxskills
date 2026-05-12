@@ -1,0 +1,480 @@
+{
+  "skill": "Java",
+  "scale": {
+    "1": "Debutant",
+    "2": "Novice",
+    "3": "Intermediaire",
+    "4": "Avance",
+    "5": "Expert"
+  },
+  "levels": [
+    {
+      "level": 1,
+      "label": "Debutant",
+      "description": "Knows Java syntax, primitive types and simple control flow.",
+      "topics": [
+        {
+          "name": "Primitive types",
+          "attendus": [
+            "Declare primitive variables",
+            "Understand int, double, boolean and char"
+          ],
+          "exemple_question": {
+            "enonce": "Which Java type is intended to store true or false values?",
+            "choix_A": "int",
+            "choix_B": "String",
+            "choix_C": "boolean",
+            "choix_D": "char",
+            "bonne_reponse": "C",
+            "explication": "The boolean type stores only true or false."
+          }
+        },
+        {
+          "name": "Control flow",
+          "attendus": [
+            "Use if/else",
+            "Read simple loops"
+          ],
+          "exemple_question": {
+            "enonce": "How many times does this loop execute? for (int i = 0; i < 3; i++) { }",
+            "choix_A": "2",
+            "choix_B": "3",
+            "choix_C": "4",
+            "choix_D": "Infinite loop",
+            "bonne_reponse": "B",
+            "explication": "The loop runs for i = 0, 1 and 2, so it executes 3 times."
+          }
+        },
+        {
+          "name": "Methods",
+          "attendus": [
+            "Declare a method",
+            "Return a value"
+          ],
+          "exemple_question": {
+            "enonce": "Which keyword returns a value from a Java method?",
+            "choix_A": "yield",
+            "choix_B": "break",
+            "choix_C": "return",
+            "choix_D": "send",
+            "bonne_reponse": "C",
+            "explication": "The return keyword sends a value back to the caller."
+          }
+        },
+        {
+          "name": "Strings",
+          "attendus": [
+            "Concatenate strings",
+            "Read basic string expressions"
+          ],
+          "exemple_question": {
+            "enonce": "What is the result of \"Hello\" + \" \" + \"Java\" ?",
+            "choix_A": "HelloJava",
+            "choix_B": "Hello Java",
+            "choix_C": "Compilation error",
+            "choix_D": "null",
+            "bonne_reponse": "B",
+            "explication": "String concatenation preserves the space in the middle."
+          }
+        },
+        {
+          "name": "Arrays",
+          "attendus": [
+            "Create an array",
+            "Access items by index"
+          ],
+          "exemple_question": {
+            "enonce": "How do you access the first element of an int[] named numbers?",
+            "choix_A": "numbers(0)",
+            "choix_B": "numbers[0]",
+            "choix_C": "numbers.get(0)",
+            "choix_D": "numbers.first()",
+            "bonne_reponse": "B",
+            "explication": "Java arrays are indexed with square brackets."
+          }
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "label": "Novice",
+      "description": "Uses arrays, lists, classes and exceptions in common situations.",
+      "topics": [
+        {
+          "name": "ArrayList",
+          "attendus": [
+            "Use ArrayList",
+            "Add and read values"
+          ],
+          "exemple_question": {
+            "enonce": "Which method adds an element to an ArrayList<String> names?",
+            "choix_A": "names.put(\"Ada\")",
+            "choix_B": "names.push(\"Ada\")",
+            "choix_C": "names.add(\"Ada\")",
+            "choix_D": "names.insert(\"Ada\")",
+            "bonne_reponse": "C",
+            "explication": "ArrayList uses add to append an element."
+          }
+        },
+        {
+          "name": "Classes and objects",
+          "attendus": [
+            "Declare a class",
+            "Instantiate an object"
+          ],
+          "exemple_question": {
+            "enonce": "Which keyword creates a new instance of a class in Java?",
+            "choix_A": "class",
+            "choix_B": "new",
+            "choix_C": "this",
+            "choix_D": "static",
+            "bonne_reponse": "B",
+            "explication": "The new keyword creates an object instance."
+          }
+        },
+        {
+          "name": "Encapsulation",
+          "attendus": [
+            "Use private fields",
+            "Understand getters and setters"
+          ],
+          "exemple_question": {
+            "enonce": "Which access modifier restricts a field to its declaring class?",
+            "choix_A": "protected",
+            "choix_B": "public",
+            "choix_C": "private",
+            "choix_D": "final",
+            "bonne_reponse": "C",
+            "explication": "private makes the field accessible only inside its class."
+          }
+        },
+        {
+          "name": "Exceptions",
+          "attendus": [
+            "Use try/catch",
+            "Understand exception handling basics"
+          ],
+          "exemple_question": {
+            "enonce": "What is the purpose of a catch block in Java?",
+            "choix_A": "Declare a local variable",
+            "choix_B": "Handle an exception",
+            "choix_C": "Create a class",
+            "choix_D": "Close a database connection automatically",
+            "bonne_reponse": "B",
+            "explication": "A catch block handles an exception raised in the associated try block."
+          }
+        },
+        {
+          "name": "Constructors",
+          "attendus": [
+            "Recognize constructors",
+            "Initialize object state"
+          ],
+          "exemple_question": {
+            "enonce": "Which statement about a constructor is correct?",
+            "choix_A": "It must always return void",
+            "choix_B": "It has the same name as the class",
+            "choix_C": "It can be called without new",
+            "choix_D": "It replaces all methods",
+            "bonne_reponse": "B",
+            "explication": "A constructor has the same name as its class and no return type."
+          }
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "label": "Intermediaire",
+      "description": "Uses generics, streams, interfaces and object equality correctly.",
+      "topics": [
+        {
+          "name": "Generics",
+          "attendus": [
+            "Use generic collection types",
+            "Avoid unnecessary casts"
+          ],
+          "exemple_question": {
+            "enonce": "What does List<String> mean in Java?",
+            "choix_A": "A list that accepts any type",
+            "choix_B": "A list restricted to String values",
+            "choix_C": "A list of characters only",
+            "choix_D": "An immutable list",
+            "bonne_reponse": "B",
+            "explication": "List<String> restricts the list to String values."
+          }
+        },
+        {
+          "name": "Streams",
+          "attendus": [
+            "Filter and transform collections",
+            "Use map and filter"
+          ],
+          "exemple_question": {
+            "enonce": "Which stream operation keeps only the elements matching a predicate?",
+            "choix_A": "collect",
+            "choix_B": "map",
+            "choix_C": "filter",
+            "choix_D": "sorted",
+            "bonne_reponse": "C",
+            "explication": "filter retains only the elements that satisfy the predicate."
+          }
+        },
+        {
+          "name": "equals and hashCode",
+          "attendus": [
+            "Understand object equality",
+            "Know when to override equals and hashCode"
+          ],
+          "exemple_question": {
+            "enonce": "Why should hashCode usually be overridden when equals is overridden?",
+            "choix_A": "To make code compile faster",
+            "choix_B": "To preserve the contract of hash-based collections",
+            "choix_C": "To avoid all null checks",
+            "choix_D": "It is never necessary",
+            "bonne_reponse": "B",
+            "explication": "HashMap and HashSet rely on the equals/hashCode contract."
+          }
+        },
+        {
+          "name": "Interfaces",
+          "attendus": [
+            "Implement interfaces",
+            "Use contracts for abstraction"
+          ],
+          "exemple_question": {
+            "enonce": "Which keyword associates a class with an interface it fulfills?",
+            "choix_A": "extends",
+            "choix_B": "inherits",
+            "choix_C": "implements",
+            "choix_D": "instanceof",
+            "bonne_reponse": "C",
+            "explication": "A class uses implements to fulfill an interface contract."
+          }
+        },
+        {
+          "name": "Optional",
+          "attendus": [
+            "Use Optional appropriately",
+            "Read common Optional APIs"
+          ],
+          "exemple_question": {
+            "enonce": "Which Optional method provides a default value when the Optional is empty?",
+            "choix_A": "orElse",
+            "choix_B": "valueOr",
+            "choix_C": "fallback",
+            "choix_D": "getOrNull",
+            "bonne_reponse": "A",
+            "explication": "orElse returns the contained value or a default value when empty."
+          }
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "label": "Avance",
+      "description": "Writes robust backend code, tests it, and reasons about concurrency and transactions.",
+      "topics": [
+        {
+          "name": "CompletableFuture",
+          "attendus": [
+            "Understand asynchronous composition",
+            "Choose the right abstraction for async work"
+          ],
+          "exemple_question": {
+            "enonce": "Which Java type is designed to represent an asynchronous computation that may produce a value later?",
+            "choix_A": "ThreadGroup",
+            "choix_B": "CompletableFuture",
+            "choix_C": "StringBuilder",
+            "choix_D": "Optional",
+            "bonne_reponse": "B",
+            "explication": "CompletableFuture models an asynchronous computation and its result."
+          }
+        },
+        {
+          "name": "Transactions",
+          "attendus": [
+            "Understand commit and rollback",
+            "Recognize transactional failures"
+          ],
+          "exemple_question": {
+            "enonce": "What does a rollback do in a transaction?",
+            "choix_A": "It confirms all pending changes",
+            "choix_B": "It undoes uncommitted changes",
+            "choix_C": "It restarts the database server",
+            "choix_D": "It deletes the table",
+            "bonne_reponse": "B",
+            "explication": "Rollback cancels the changes that were not committed."
+          }
+        },
+        {
+          "name": "Testing",
+          "attendus": [
+            "Write focused unit tests",
+            "Isolate dependencies with mocks"
+          ],
+          "exemple_question": {
+            "enonce": "What is the main goal of a unit test?",
+            "choix_A": "Test the entire production system end to end",
+            "choix_B": "Verify a small isolated behavior of the code",
+            "choix_C": "Replace code review",
+            "choix_D": "Measure network latency",
+            "bonne_reponse": "B",
+            "explication": "A unit test targets a narrow, isolated behavior."
+          }
+        },
+        {
+          "name": "JVM memory",
+          "attendus": [
+            "Understand heap versus stack",
+            "Recognize basic memory issues"
+          ],
+          "exemple_question": {
+            "enonce": "Where are Java objects primarily allocated at runtime?",
+            "choix_A": "Stack",
+            "choix_B": "Heap",
+            "choix_C": "Classpath",
+            "choix_D": "ThreadLocal",
+            "bonne_reponse": "B",
+            "explication": "Objects are primarily allocated on the heap."
+          }
+        },
+        {
+          "name": "Immutability",
+          "attendus": [
+            "Reduce side effects",
+            "Use final appropriately"
+          ],
+          "exemple_question": {
+            "enonce": "Which keyword helps make a field non-reassignable after initialization?",
+            "choix_A": "volatile",
+            "choix_B": "abstract",
+            "choix_C": "final",
+            "choix_D": "native",
+            "bonne_reponse": "C",
+            "explication": "final prevents a field from being reassigned after initialization."
+          }
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "label": "Expert",
+      "description": "Masters JVM internals, performance, architecture and advanced design trade-offs.",
+      "topics": [
+        {
+          "name": "JIT compilation",
+          "attendus": [
+            "Understand bytecode and runtime compilation",
+            "Explain what the JIT does"
+          ],
+          "exemple_question": {
+            "enonce": "Which JVM component compiles hot bytecode paths into optimized native code at runtime?",
+            "choix_A": "Garbage Collector",
+            "choix_B": "JIT compiler",
+            "choix_C": "ClassLoader",
+            "choix_D": "SecurityManager",
+            "bonne_reponse": "B",
+            "explication": "The JIT compiler optimizes hot code paths at runtime."
+          }
+        },
+        {
+          "name": "Garbage collection",
+          "attendus": [
+            "Understand the purpose of the GC",
+            "Reason about collection trade-offs"
+          ],
+          "exemple_question": {
+            "enonce": "What is the primary role of the Java garbage collector?",
+            "choix_A": "Compile Java source code",
+            "choix_B": "Free memory used by unreachable objects",
+            "choix_C": "Encrypt in-memory data",
+            "choix_D": "Check authorization rules",
+            "bonne_reponse": "B",
+            "explication": "The garbage collector reclaims memory from objects that are no longer reachable."
+          }
+        },
+        {
+          "name": "Design patterns",
+          "attendus": [
+            "Choose patterns based on context",
+            "Understand strategy and composition"
+          ],
+          "exemple_question": {
+            "enonce": "Which pattern encapsulates a family of interchangeable algorithms?",
+            "choix_A": "Singleton",
+            "choix_B": "Strategy",
+            "choix_C": "Builder",
+            "choix_D": "Observer",
+            "bonne_reponse": "B",
+            "explication": "Strategy encapsulates interchangeable algorithms behind a common abstraction."
+          }
+        },
+        {
+          "name": "Performance tuning",
+          "attendus": [
+            "Profile before optimizing",
+            "Interpret JVM performance signals"
+          ],
+          "exemple_question": {
+            "enonce": "What is the healthiest first step before a complex optimization effort?",
+            "choix_A": "Optimize loops at random",
+            "choix_B": "Profile the application to find a real bottleneck",
+            "choix_C": "Remove all logs",
+            "choix_D": "Increase the heap size blindly",
+            "bonne_reponse": "B",
+            "explication": "Profiling identifies actual bottlenecks before code is changed."
+          }
+        },
+        {
+          "name": "Architecture",
+          "attendus": [
+            "Reason about coupling",
+            "Design for evolvability and testability"
+          ],
+          "exemple_question": {
+            "enonce": "What is a direct benefit of low coupling between components?",
+            "choix_A": "Zero compilation time",
+            "choix_B": "Better evolvability and testability",
+            "choix_C": "No need for documentation",
+            "choix_D": "No bugs in production",
+            "bonne_reponse": "B",
+            "explication": "Low coupling makes components easier to evolve, replace and test independently."
+          }
+        }
+      ]
+    }
+  ],
+  "test_generation_instructions": {
+    "format": "QCM only",
+    "structure_question": {
+      "champs": [
+        "id",
+        "niveau",
+        "topic",
+        "attendu_cible",
+        "enonce",
+        "choix_A",
+        "choix_B",
+        "choix_C",
+        "choix_D",
+        "bonne_reponse",
+        "explication"
+      ],
+      "nb_choix": 4,
+      "nb_bonnes_reponses": 1
+    },
+    "types_de_questions": [
+      "Code reading",
+      "Concept check",
+      "Common mistake",
+      "Best practice",
+      "API choice"
+    ],
+    "consignes": [
+      "Each question targets exactly one expected outcome",
+      "Distractors must be plausible",
+      "Difficulty must stay aligned with the target level",
+      "The explanation must justify the correct answer"
+    ]
+  }
+}

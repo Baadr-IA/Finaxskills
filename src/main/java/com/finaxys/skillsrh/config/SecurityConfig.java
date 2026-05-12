@@ -37,7 +37,8 @@ import java.util.List;
 @EnableConfigurationProperties({
     AppOAuth2Properties.class,
     AppCorsProperties.class,
-    PermissionProfilesProperties.class
+    PermissionProfilesProperties.class,
+    QuizGenerationProperties.class
 })
 public class SecurityConfig {
 

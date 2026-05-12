@@ -83,6 +83,8 @@ dependency-check-report.*
 .env.*
 .env.local
 !.env.sample
+.venv/
+.venv-quiz/
 
 # Native builds
 **/*.exe
@@ -93,3 +95,7 @@ dependency-check-report.*
 # Misc
 *.orig
 *.rej
+
+# Python
+__pycache__/
+*.pyc

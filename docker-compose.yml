@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: postgres-db
     environment:
       POSTGRES_DB: mydb
@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./db-init/01-pgvector.sql:/docker-entrypoint-initdb.d/01-pgvector.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
       interval: 10s
@@ -23,6 +24,40 @@ services:
           memory: 512m
     networks:
       - spring-network
+
+  # FastAPI Quiz Generation Service
+  python-quiz-api:
+    build:
+      context: .
+      dockerfile: python-quiz-api/Dockerfile
+    container_name: python-quiz-api
+    environment:
+      QUIZ_REFERENTIAL_DIR: /app/referentials
+      QUIZ_ENABLE_LLM_GENERATION: "true"
+      QUIZ_ENABLE_LLM_VERIFIER: "true"
+      QUIZ_OPENAI_MODEL: ${QUIZ_OPENAI_MODEL:-gpt-4.1-mini}
+      QUIZ_OPENAI_BASE_URL: ${QUIZ_OPENAI_BASE_URL:-https://api.openai.com/v1/chat/completions}
+      QUIZ_OPENAI_TIMEOUT_SECONDS: ${QUIZ_OPENAI_TIMEOUT_SECONDS:-8}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+    networks:
+      - spring-network
+    restart: unless-stopped
 
   # Spring Boot Application
   spring-app:
@@ -39,10 +74,13 @@ services:
       APP_SECURITY_OAUTH2_ISSUER_URI: https://awskeycloak.lab-finaxys.net/realms/Template-app-Java-angular
       APP_SECURITY_OAUTH2_AUDIENCE: template-app-spring-api
       APP_SECURITY_OAUTH2_API_CLIENT_ID: template-app-spring-api
+      APP_QUIZ_GENERATION_BASE_URL: http://python-quiz-api:8000
     ports:
       - "8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      python-quiz-api:
         condition: service_healthy
     deploy:
       resources:
