@@ -13,6 +13,55 @@ from .models import QuizGenerationRequest, QuizGenerationResponse
 
 
 VALID_OPTIONS = {"A", "B", "C", "D"}
+GENERATION_PROMPT_PREFIX = """
+You are a senior technical assessment designer specialized in building fair, level-based multiple-choice quizzes for employee technical evaluation.
+
+Your task is to generate a quiz block for the requested skill and level.
+
+You must use the provided referential as the single source of truth:
+- use the skill description
+- use the target level description
+- use the listed topics
+- use the expected outcomes ("attendus")
+- align the real difficulty with the requested level only
+- do not generate questions outside the referential scope
+
+Question design rules:
+- generate exactly the requested number of questions
+- each question must assess one concrete expected outcome from the referential
+- each question must have exactly 4 options: A, B, C, D
+- exactly one option must be correct
+- incorrect options must be plausible and technically credible
+- avoid ambiguous wording
+- avoid trivia and overly academic questions
+- prioritize professional, practical understanding
+- explanations must clearly justify why the correct answer is correct
+
+Difficulty rules:
+- do not mix beginner and expert expectations in the same block
+- keep the vocabulary, traps, and reasoning depth aligned with the requested level
+- if the level is intermediate, questions must require understanding, not simple memorization
+
+Output rules:
+- return valid JSON only
+- no markdown
+- no comments
+- no prose outside JSON
+- strictly follow the required schema
+
+Context payload:
+{
+  "skill": "...",
+  "requestedLevel": ...,
+  "questionCount": ...,
+  "optionalInstructions": "...",
+  "difficulty": { ... },
+  "topics": [...],
+  "generationRules": {...},
+  "fewShotExamples": [...],
+  "outputSchema": {...}
+}
+""".strip()
 
 
 @dataclass
@@ -86,10 +135,7 @@ def generate_with_llm(
     referential: dict[str, Any],
     level_definition: dict[str, Any],
 ) -> dict[str, Any]:
-    system_prompt = (
-        "You generate technical multiple-choice quiz blocks. "
-        "Return JSON only with no markdown and no extra prose."
-    )
+    system_prompt = GENERATION_PROMPT_PREFIX
     user_prompt = build_generation_prompt(request, referential, level_definition)
     response_text = call_openai_chat_completion(system_prompt, user_prompt)
 
@@ -161,13 +207,7 @@ def build_generation_prompt(
         },
     }
 
-    return (
-        "Generate a technically correct quiz block. "
-        "The real difficulty must match the requested level. "
-        "Questions must have exactly four options, one correct answer, and plausible distractors. "
-        "Return JSON only.\n"
-        + json.dumps(prompt_payload, ensure_ascii=False)
-    )
+    return json.dumps(prompt_payload, ensure_ascii=False)
 
 
 def verify_generated_payload(generated: dict[str, Any], referential: dict[str, Any], level: int) -> None:
