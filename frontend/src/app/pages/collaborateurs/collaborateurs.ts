@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import Keycloak from 'keycloak-js';
 
 import { CollaboratorService } from '../../core/services/collaborator.service';
 import { PermissionStoreService } from '../../auth/permission-store.service';
@@ -18,6 +19,7 @@ type FormState = { mode: 'create' | 'edit'; id?: number; firstName: string; last
 export class Collaborateurs {
   private readonly service = inject(CollaboratorService);
   private readonly permissionStore = inject(PermissionStoreService);
+  private readonly keycloak = inject(Keycloak);
 
   readonly collaborators = signal<CollaboratorDto[]>([]);
   readonly isLoading = signal(true);
@@ -74,7 +76,12 @@ export class Collaborateurs {
   closeForm(): void {
     this.formState.set(null);
   }
-
+  ngOnInit(){
+    const token = this.keycloak.tokenParsed;
+    const clientRoles =
+      token?.resource_access?.['template-app-spring-api']?.roles || [];
+    console.log('Client roles (user connecté):', clientRoles);
+  }
   async submitForm(): Promise<void> {
     const form = this.formState();
     if (!form || this.isSubmitting()) return;

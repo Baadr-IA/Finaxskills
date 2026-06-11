@@ -1,0 +1,68 @@
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><span class="bc-home">Accueil</span><span class="bc-sep">/</span><span class="bc-current">Suivi des évaluations</span></div>
+    <h1>Suivi des évaluations</h1>
+    <p class="muted">Assignez et suivez les évaluations des collaborateurs</p>
+  </div>
+  <div>
+    <button class="btn-primary">+ Assigner une évaluation</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="tabs">
+      <button (click)="setFilter('all')" [class.active]="filter() === 'all'">Tous ({{ counts().all }})</button>
+      <button (click)="setFilter('pending')" [class.active]="filter() === 'pending'">Attente ({{ counts().pending }})</button>
+      <button (click)="setFilter('in_progress')" [class.active]="filter() === 'in_progress'">En cours ({{ counts().in_progress }})</button>
+      <button (click)="setFilter('completed')" [class.active]="filter() === 'completed'">Complété ({{ counts().completed }})</button>
+    </div>
+
+    <div class="actions">
+      <input type="search" placeholder="Rechercher un collaborateur." [value]="search()" (input)="search.set($any($event.target).value)" />
+    </div>
+  </div>
+
+  <div class="card-body">
+    <table class="evaluations-table">
+      <thead>
+        <tr>
+          <th>Collaborateur</th>
+          <th>Poste</th>
+          <th>Évaluation</th>
+          <th>Statut</th>
+          <th>Date assignée</th>
+          <th>Date planifiée</th>
+          <th>Date validée</th>
+          <th>Niveau déclaré</th>
+          <th>Niveau validé</th>
+          <th>Score</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of filtered()">
+          <td>{{ e.collaborator }}</td>
+          <td>
+            <span [attr.title]="e.jobTitle" [class]="jobClass(e.jobTitle)">{{ e.jobTitle ?? 'N/A' }}</span>
+          </td>
+          <td>{{ e.evaluation }}</td>
+          <td>{{ e.status }}</td>
+          <td>{{ e.dateAssigned }}</td>
+          <td>{{ e.datePlanned ?? 'N/A' }}</td>
+          <td>{{ e.dateValidated ?? 'N/A' }}</td>
+          <td>
+            <span [attr.title]="e.levelDeclared" [class]="levelClass(e.levelDeclared)">{{ e.levelDeclared ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span [attr.title]="e.levelValidated" [class]="levelClass(e.levelValidated)">{{ e.levelValidated ?? 'N/A' }}</span>
+          </td>
+          <td>{{ e.score ?? 'N/A' }}</td>
+          <td class="muted">N/A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
