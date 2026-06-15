@@ -2,6 +2,7 @@ package com.finaxys.skillsrh.controller;
 
 import com.finaxys.skillsrh.api.ApiException;
 import com.finaxys.skillsrh.domain.Skill;
+import com.finaxys.skillsrh.domain.Level;
 import com.finaxys.skillsrh.domain.SkillCategory;
 import com.finaxys.skillsrh.repository.SkillCategoryRepository;
 import com.finaxys.skillsrh.repository.SkillRepository;
@@ -58,7 +59,9 @@ public class SkillController {
     @PreAuthorize("@permissions.has(authentication, 'SKILLS', 'CREATE', 'ALL')")
     public ResponseEntity<SkillResponse> create(@Valid @RequestBody SkillRequest req) {
         SkillCategory category = requireCategory(req.categoryId());
-        Skill saved = skillRepository.save(new Skill(req.name(), req.description(), category));
+        Level level = null;
+        try { level = Level.from(req.level()); } catch (Exception ignored) {}
+        Skill saved = skillRepository.save(new Skill(req.name(), req.description(), category, level));
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
     }
 
@@ -69,6 +72,9 @@ public class SkillController {
         skill.setName(req.name());
         skill.setDescription(req.description());
         skill.setCategory(requireCategory(req.categoryId()));
+        if (req.level() != null) {
+            skill.setLevel(Level.from(req.level()));
+        }
         return toResponse(skillRepository.save(skill));
     }
 
@@ -95,15 +101,17 @@ public class SkillController {
             s.getName(),
             s.getDescription(),
             s.getCategory().getId(),
-            s.getCategory().getName()
+            s.getCategory().getName(),
+            s.getLevel() != null ? s.getLevel().getLabel() : null
         );
     }
 
-    public record SkillResponse(Long id, String name, String description, Long categoryId, String categoryName) {}
+    public record SkillResponse(Long id, String name, String description, Long categoryId, String categoryName, String level) {}
 
     public record SkillRequest(
         @NotBlank @Size(max = 100) String name,
         @Size(max = 255) String description,
-        @NotNull Long categoryId
+        @NotNull Long categoryId,
+        String level
     ) {}
 }
