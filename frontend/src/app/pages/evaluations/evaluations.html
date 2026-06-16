@@ -5,9 +5,13 @@
     <p class="muted">Assignez et suivez les évaluations des collaborateurs</p>
   </div>
   <div>
-    <button class="btn-primary">+ Assigner une évaluation</button>
+    <button class="btn-primary" (click)="openAssignModal()">+ Assigner une évaluation</button>
   </div>
 </div>
+
+@if (assignMessage()) {
+  <div class="alert-success">{{ assignMessage() }}</div>
+}
 
 <div class="card">
   <div class="card-header">
@@ -64,5 +68,59 @@
     </table>
   </div>
 </div>
+
+@if (isAssignModalOpen()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeAssignModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">Assigner une évaluation</h2>
+
+      @if (collaboratorError()) {
+        <div class="alert-error mb-4">{{ collaboratorError() }}</div>
+      }
+
+      <div class="modal-fields">
+        <div class="field">
+          <label for="assign-collaborator">Collaborateur <span class="required">*</span></label>
+          <select
+            id="assign-collaborator"
+            [value]="selectedCollaboratorId() ?? ''"
+            (change)="onCollaboratorSelected($any($event.target).value)"
+            [disabled]="collaboratorsLoading()"
+          >
+            <option value="">Saisir ou sélectionner un collaborateur</option>
+            @for (c of collaborators(); track c.id) {
+              <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
+            }
+          </select>
+          @if (!collaboratorsLoading() && collaborators().length === 0) {
+            <small class="muted">Aucun collaborateur disponible</small>
+          }
+          @if (selectedCollaborator()) {
+            <small class="selected-meta">{{ selectedCollaborator()!.firstName }} {{ selectedCollaborator()!.lastName }} - {{ selectedCollaborator()!.jobTitle ?? 'N/A' }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="assign-evaluation">Évaluation <span class="required">*</span></label>
+          <select
+            id="assign-evaluation"
+            [value]="selectedEvaluation()"
+            (change)="selectedEvaluation.set($any($event.target).value)"
+          >
+            <option value="">Saisir ou sélectionner une évaluation</option>
+            @for (item of evaluationOptions; track item) {
+              <option [value]="item">{{ item }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeAssignModal()">Annuler</button>
+        <button type="button" class="btn-primary" (click)="submitAssignment()" [disabled]="!canAssign()">Assigner</button>
+      </div>
+    </div>
+  </div>
+}
 
 

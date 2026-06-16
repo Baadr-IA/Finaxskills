@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { EvaluationService, EvaluationDto } from '../../core/services/evaluation.service';
+import { CollaboratorService } from '../../core/services/collaborator.service';
+import type { CollaboratorDto } from '../../api/collaborator.dto';
 
 type EvalStatus = 'pending' | 'in_progress' | 'completed';
 
@@ -24,7 +25,7 @@ type Evaluation = {
 @Component({
   selector: 'app-evaluations',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './evaluations.html',
   styleUrl: './evaluations.css',
 })
@@ -32,8 +33,26 @@ export class Evaluations {
   readonly all = signal<Evaluation[]>([]);
   readonly filter = signal<'all' | 'pending' | 'in_progress' | 'completed'>('all');
   readonly search = signal('');
+  readonly isAssignModalOpen = signal(false);
+  readonly collaborators = signal<CollaboratorDto[]>([]);
+  readonly collaboratorsLoading = signal(false);
+  readonly collaboratorError = signal<string | null>(null);
+  readonly selectedCollaboratorId = signal<number | null>(null);
+  readonly selectedEvaluation = signal('');
+  readonly assignMessage = signal<string | null>(null);
+
+  readonly evaluationOptions = ['test fondamentaux java', 'test fondamentaux python'];
 
   private readonly evaluationService = inject(EvaluationService);
+  private readonly collaboratorService = inject(CollaboratorService);
+
+  readonly selectedCollaborator = computed(() => {
+    const id = this.selectedCollaboratorId();
+    if (id == null) return null;
+    return this.collaborators().find((c) => c.id === id) ?? null;
+  });
+
+  readonly canAssign = computed(() => this.selectedCollaboratorId() != null && this.selectedEvaluation().trim().length > 0);
 
   readonly counts = computed(() => {
     const list = this.all();
@@ -77,26 +96,83 @@ export class Evaluations {
     this.filter.set(f);
   }
 
+  async openAssignModal(): Promise<void> {
+    this.assignMessage.set(null);
+    this.collaboratorError.set(null);
+    this.selectedCollaboratorId.set(null);
+    this.selectedEvaluation.set('');
+    this.isAssignModalOpen.set(true);
+
+    if (this.collaborators().length === 0) {
+      await this.loadCollaborators();
+    }
+  }
+
+  closeAssignModal(): void {
+    this.isAssignModalOpen.set(false);
+  }
+
+  async submitAssignment(): Promise<void> {
+    if (!this.canAssign()) return;
+
+    const collaborator = this.selectedCollaborator();
+    if (!collaborator) return;
+
+    try {
+      const created = await this.evaluationService.createAssignment({
+        collaboratorId: collaborator.id,
+        evaluationName: this.selectedEvaluation(),
+      });
+      this.all.update((list) => [this.mapDto(created), ...list]);
+      this.assignMessage.set('Evaluation assignee avec succes.');
+      this.closeAssignModal();
+    } catch {
+      this.collaboratorError.set("Impossible d'assigner l'evaluation.");
+    }
+  }
+
+  onCollaboratorSelected(value: string): void {
+    const trimmed = value.trim();
+    this.selectedCollaboratorId.set(trimmed ? parseInt(trimmed, 10) : null);
+  }
+
+  private async loadCollaborators(): Promise<void> {
+    this.collaboratorsLoading.set(true);
+    this.collaboratorError.set(null);
+    try {
+      const list = await this.collaboratorService.list();
+      this.collaborators.set(list);
+    } catch {
+      this.collaboratorError.set('Impossible de charger les collaborateurs.');
+    } finally {
+      this.collaboratorsLoading.set(false);
+    }
+  }
+
   async load(q?: string, status?: 'pending' | 'in_progress' | 'completed' | undefined) {
     try {
       const data = await this.evaluationService.list(q, status as string | undefined);
-      const mapped: Evaluation[] = (data || []).map((d: EvaluationDto) => ({
-        id: d.id,
-        collaborator: d.collaborator,
-        jobTitle: d.jobTitle ?? null,
-        evaluation: d.evaluation,
-        status: normalizeStatus(d.status),
-        dateAssigned: d.dateAssigned,
-        datePlanned: d.datePlanned ?? null,
-        dateValidated: d.dateValidated ?? null,
-        levelDeclared: d.levelDeclared ?? null,
-        levelValidated: d.levelValidated ?? null,
-        score: d.score ?? null,
-      }));
+      const mapped: Evaluation[] = (data || []).map((d: EvaluationDto) => this.mapDto(d));
       this.all.set(mapped);
     } catch (err) {
       // ignore for now
     }
+  }
+
+  private mapDto(d: EvaluationDto): Evaluation {
+    return {
+      id: d.id,
+      collaborator: d.collaborator,
+      jobTitle: d.jobTitle ?? null,
+      evaluation: d.evaluation,
+      status: normalizeStatus(d.status),
+      dateAssigned: d.dateAssigned,
+      datePlanned: d.datePlanned ?? null,
+      dateValidated: d.dateValidated ?? null,
+      levelDeclared: d.levelDeclared ?? null,
+      levelValidated: d.levelValidated ?? null,
+      score: d.score ?? null,
+    };
   }
 
   // CSS class helpers for roles and levels

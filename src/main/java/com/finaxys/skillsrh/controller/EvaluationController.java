@@ -1,27 +1,65 @@
 package com.finaxys.skillsrh.controller;
 
+import com.finaxys.skillsrh.api.ApiException;
+import com.finaxys.skillsrh.domain.Collaborator;
 import com.finaxys.skillsrh.domain.Evaluation;
+import com.finaxys.skillsrh.domain.Status;
+import com.finaxys.skillsrh.repository.CollaboratorRepository;
 import com.finaxys.skillsrh.repository.EvaluationRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 public class EvaluationController {
 
+    private static final Set<String> ALLOWED_EVALUATIONS = Set.of(
+        "test fondamentaux java",
+        "test fondamentaux python"
+    );
+
     private final EvaluationRepository evaluationRepository;
+    private final CollaboratorRepository collaboratorRepository;
 
     private static final DateTimeFormatter UI_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public EvaluationController(EvaluationRepository evaluationRepository) {
+    public EvaluationController(EvaluationRepository evaluationRepository, CollaboratorRepository collaboratorRepository) {
         this.evaluationRepository = evaluationRepository;
+        this.collaboratorRepository = collaboratorRepository;
+    }
+
+    @PostMapping("/evaluations")
+    @PreAuthorize("@permissions.has(authentication, 'COLLABORATORS', 'CREATE', 'ALL')")
+    public ResponseEntity<EvaluationResponse> create(@Valid @RequestBody CreateEvaluationRequest req) {
+        Collaborator collaborator = collaboratorRepository.findById(req.collaboratorId())
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "collaborator-not-found", "Collaborator not found"));
+
+        String normalized = req.evaluationName().trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_EVALUATIONS.contains(normalized)) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "evaluation-not-in-referential", "Evaluation is not available in referential");
+        }
+
+        Evaluation evaluation = new Evaluation(collaborator, req.evaluationName().trim(), Status.EN_ATTENTE, LocalDate.now());
+        Evaluation saved = evaluationRepository.save(evaluation);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
     }
 
     @GetMapping("/evaluations")
@@ -107,6 +145,11 @@ public class EvaluationController {
         String levelDeclared,
         String levelValidated,
         String score
+    ) {}
+
+    public record CreateEvaluationRequest(
+        @NotNull Long collaboratorId,
+        @NotBlank @Size(max = 255) String evaluationName
     ) {}
 }
 

@@ -16,6 +16,11 @@ export type EvaluationDto = {
   score?: string | null;
 };
 
+export type CreateEvaluationRequest = {
+  collaboratorId: number;
+  evaluationName: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class EvaluationService {
   private readonly http = inject(HttpClient);
@@ -25,6 +30,10 @@ export class EvaluationService {
     if (q && q.trim().length > 0) params = params.set('q', q.trim());
     if (status && status.trim().length > 0) params = params.set('status', status.trim());
     return firstValueFrom(this.http.get<EvaluationDto[]>('/api/evaluations', { params }));
+  }
+
+  createAssignment(payload: CreateEvaluationRequest): Promise<EvaluationDto> {
+    return firstValueFrom(this.http.post<EvaluationDto>('/api/evaluations', payload));
   }
 }
 
