@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { EvaluationService, EvaluationDto } from '../../core/services/evaluation.service';
 
 type EvalStatus = 'pending' | 'in_progress' | 'completed';
 
@@ -18,18 +19,7 @@ type Evaluation = {
   score?: string | null;
 };
 
-const STATIC_EVALUATIONS: Evaluation[] = [
-  { id: 1, collaborator: 'Jean Dupont', jobTitle: 'Développeur', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '20/03/2026' },
-  { id: 2, collaborator: 'Jean Dupont', jobTitle: 'Développeur', evaluation: 'Test Java Complet', status: 'completed', dateAssigned: '10/02/2026', datePlanned: '15/02/2026', dateValidated: '15/02/2026', levelDeclared: 'NIVEAU 2', levelValidated: 'NIVEAU 2', score: '100%' },
-  { id: 3, collaborator: 'Marie Martin', jobTitle: 'Ingénieur Devops', evaluation: 'Test Fondamentaux Python', status: 'in_progress', dateAssigned: '15/03/2026', datePlanned: '26/03/2026' },
-  { id: 4, collaborator: 'Pierre Bernard', jobTitle: 'Product Owner', evaluation: 'Test Java Complet', status: 'completed', dateAssigned: '05/01/2026', datePlanned: '10/01/2026', dateValidated: '10/01/2026', levelDeclared: 'NIVEAU 3', levelValidated: 'NIVEAU 3', score: '100%' },
-  { id: 5, collaborator: 'Marie Martin', jobTitle: 'Ingénieur Devops', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '05/04/2026' },
-  { id: 6, collaborator: 'Jean Dupont', jobTitle: 'Développeur', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '07/04/2026', levelDeclared: 'NIVEAU 1' , levelValidated: 'NIVEAU 1', score: '100%' },
-  { id: 7, collaborator: 'Marie Martin', jobTitle: 'Ingénieur Devops', evaluation: 'Test Java Complet', status: 'completed', dateAssigned: '01/04/2026', datePlanned: '05/04/2026', dateValidated: '05/04/2026', levelDeclared: 'NIVEAU 2', levelValidated: 'NIVEAU 3', score: '90%' },
-  { id: 8, collaborator: 'Marie Martin', jobTitle: 'Ingénieur Devops', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '11/05/2026' },
-  { id: 9, collaborator: 'Jean Dupont', jobTitle: 'Développeur', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '17/05/2026' },
-  { id: 10, collaborator: 'Marie Martin', jobTitle: 'Ingénieur Devops', evaluation: 'Test Java Complet', status: 'pending', dateAssigned: '01/06/2026' },
-];
+// data is now loaded from backend via EvaluationService
 
 @Component({
   selector: 'app-evaluations',
@@ -39,9 +29,11 @@ const STATIC_EVALUATIONS: Evaluation[] = [
   styleUrl: './evaluations.css',
 })
 export class Evaluations {
-  readonly all = signal<Evaluation[]>(STATIC_EVALUATIONS);
+  readonly all = signal<Evaluation[]>([]);
   readonly filter = signal<'all' | 'pending' | 'in_progress' | 'completed'>('all');
   readonly search = signal('');
+
+  private readonly evaluationService = inject(EvaluationService);
 
   readonly counts = computed(() => {
     const list = this.all();
@@ -67,8 +59,44 @@ export class Evaluations {
     });
   });
 
+  constructor() {
+    // reactive effect: load data whenever search or filter changes
+    effect(() => {
+      const q = this.search();
+      const f = this.filter();
+      const useRemote = q.trim().length >= 3 || f !== 'all';
+      if (useRemote) {
+        this.load(q.trim().length >= 3 ? q.trim() : undefined, f !== 'all' ? f : undefined);
+      } else {
+        this.load();
+      }
+    });
+  }
+
   setFilter(f: 'all' | 'pending' | 'in_progress' | 'completed'): void {
     this.filter.set(f);
+  }
+
+  async load(q?: string, status?: 'pending' | 'in_progress' | 'completed' | undefined) {
+    try {
+      const data = await this.evaluationService.list(q, status as string | undefined);
+      const mapped: Evaluation[] = (data || []).map((d: EvaluationDto) => ({
+        id: d.id,
+        collaborator: d.collaborator,
+        jobTitle: d.jobTitle ?? null,
+        evaluation: d.evaluation,
+        status: normalizeStatus(d.status),
+        dateAssigned: d.dateAssigned,
+        datePlanned: d.datePlanned ?? null,
+        dateValidated: d.dateValidated ?? null,
+        levelDeclared: d.levelDeclared ?? null,
+        levelValidated: d.levelValidated ?? null,
+        score: d.score ?? null,
+      }));
+      this.all.set(mapped);
+    } catch (err) {
+      // ignore for now
+    }
   }
 
   // CSS class helpers for roles and levels
@@ -89,6 +117,20 @@ export class Evaluations {
     if (l.includes('niveau 3') || l.includes('niveau3')) return 'level-badge level-3';
     return 'level-badge level-none';
   }
+}
+
+// map backend status labels (French) or other forms to EvalStatus
+function normalizeStatus(status: string | null | undefined): EvalStatus {
+  if (!status) return 'pending';
+  const s = status.trim().toLowerCase();
+  if (s === 'en attente' || s === 'en_attente' || s === 'en-attente' || s === 'pending') return 'pending';
+  if (s === 'en cours' || s === 'en_cours' || s === 'en-cours' || s === 'in_progress') return 'in_progress';
+  if (s === 'complété' || s === 'complete' || s === 'complet' || s === 'completed') return 'completed';
+  // fallback: try to detect keywords
+  if (s.includes('attente') || s.includes('pending')) return 'pending';
+  if (s.includes('cours') || s.includes('in_progress') || s.includes('in progress')) return 'in_progress';
+  if (s.includes('compl') || s.includes('complete') || s.includes('completed')) return 'completed';
+  return 'pending';
 }
 
 

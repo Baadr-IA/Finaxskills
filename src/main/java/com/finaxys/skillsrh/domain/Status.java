@@ -3,7 +3,7 @@ package com.finaxys.skillsrh.domain;
 public enum Status {
     EN_ATTENTE("en attente"),
     EN_COURS("en cours"),
-    COMPLETE("complété");
+    COMPLETE("completé");
 
     private final String label;
 

@@ -5,6 +5,7 @@ import com.finaxys.skillsrh.repository.EvaluationRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.format.DateTimeFormatter;
@@ -25,9 +26,51 @@ public class EvaluationController {
 
     @GetMapping("/evaluations")
     @PreAuthorize("@permissions.has(authentication, 'COLLABORATORS', 'READ', 'ALL')")
-    public List<EvaluationResponse> list() {
+    public List<EvaluationResponse> list(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status
+    ) {
         List<Evaluation> evaluations = evaluationRepository.findAllByOrderByDateAssignedDesc();
-        return evaluations.stream().map(this::toResponse).collect(Collectors.toList());
+
+        // apply simple in-memory filtering for search and status
+        return evaluations.stream()
+                .filter(e -> {
+                    if (q != null && !q.trim().isEmpty()) {
+                        String nq = q.toLowerCase();
+                        String collaborator = (e.getCollaborator().getFirstName() + " " + e.getCollaborator().getLastName()).toLowerCase();
+                        String evalName = e.getEvaluationName() != null ? e.getEvaluationName().toLowerCase() : "";
+                        String jobTitle = e.getCollaborator().getJobTitle() != null ? e.getCollaborator().getJobTitle().toLowerCase() : "";
+                        if (!(collaborator.contains(nq) || evalName.contains(nq) || jobTitle.contains(nq))) {
+                            return false;
+                        }
+                    }
+                    if (status != null && !status.trim().isEmpty()) {
+                        // map frontend status values to domain Status
+                        try {
+                            switch (status.trim().toLowerCase()) {
+                                case "pending":
+                                    return e.getStatus() == com.finaxys.skillsrh.domain.Status.EN_ATTENTE;
+                                case "in_progress":
+                                    return e.getStatus() == com.finaxys.skillsrh.domain.Status.EN_COURS;
+                                case "completed":
+                                    return e.getStatus() == com.finaxys.skillsrh.domain.Status.COMPLETE;
+                                default:
+                                    // try to match by label or name
+                                    try {
+                                        com.finaxys.skillsrh.domain.Status s = com.finaxys.skillsrh.domain.Status.fromLabel(status);
+                                        return e.getStatus() == s;
+                                    } catch (Exception ex) {
+                                        return true; // unknown filter value -> do not filter out
+                                    }
+                            }
+                        } catch (Exception ex) {
+                            return true;
+                        }
+                    }
+                    return true;
+                })
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     private EvaluationResponse toResponse(Evaluation e) {
