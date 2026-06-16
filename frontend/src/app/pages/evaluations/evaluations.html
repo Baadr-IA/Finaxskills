@@ -1,0 +1,126 @@
+<div class="page-header">
+  <div>
+    <div class="breadcrumb"><span class="bc-home">Accueil</span><span class="bc-sep">/</span><span class="bc-current">Suivi des évaluations</span></div>
+    <h1>Suivi des évaluations</h1>
+    <p class="muted">Assignez et suivez les évaluations des collaborateurs</p>
+  </div>
+  <div>
+    <button class="btn-primary" (click)="openAssignModal()">+ Assigner une évaluation</button>
+  </div>
+</div>
+
+@if (assignMessage()) {
+  <div class="alert-success">{{ assignMessage() }}</div>
+}
+
+<div class="card">
+  <div class="card-header">
+    <div class="tabs">
+      <button (click)="setFilter('all')" [class.active]="filter() === 'all'">Tous ({{ counts().all }})</button>
+      <button (click)="setFilter('pending')" [class.active]="filter() === 'pending'">Attente ({{ counts().pending }})</button>
+      <button (click)="setFilter('in_progress')" [class.active]="filter() === 'in_progress'">En cours ({{ counts().in_progress }})</button>
+      <button (click)="setFilter('completed')" [class.active]="filter() === 'completed'">Complété ({{ counts().completed }})</button>
+    </div>
+
+    <div class="actions">
+      <input type="search" placeholder="Rechercher un collaborateur." [value]="search()" (input)="search.set($any($event.target).value)" />
+    </div>
+  </div>
+
+  <div class="card-body">
+    <table class="evaluations-table">
+      <thead>
+        <tr>
+          <th>Collaborateur</th>
+          <th>Poste</th>
+          <th>Évaluation</th>
+          <th>Statut</th>
+          <th>Date assignée</th>
+          <th>Date planifiée</th>
+          <th>Date validée</th>
+          <th>Niveau déclaré</th>
+          <th>Niveau validé</th>
+          <th>Score</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of filtered()">
+          <td>{{ e.collaborator }}</td>
+          <td>
+            <span [attr.title]="e.jobTitle" [class]="jobClass(e.jobTitle)">{{ e.jobTitle ?? 'N/A' }}</span>
+          </td>
+          <td>{{ e.evaluation }}</td>
+          <td>{{ e.status }}</td>
+          <td>{{ e.dateAssigned }}</td>
+          <td>{{ e.datePlanned ?? 'N/A' }}</td>
+          <td>{{ e.dateValidated ?? 'N/A' }}</td>
+          <td>
+            <span [attr.title]="e.levelDeclared" [class]="levelClass(e.levelDeclared)">{{ e.levelDeclared ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span [attr.title]="e.levelValidated" [class]="levelClass(e.levelValidated)">{{ e.levelValidated ?? 'N/A' }}</span>
+          </td>
+          <td>{{ e.score ?? 'N/A' }}</td>
+          <td class="muted">N/A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (isAssignModalOpen()) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeAssignModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">Assigner une évaluation</h2>
+
+      @if (collaboratorError()) {
+        <div class="alert-error mb-4">{{ collaboratorError() }}</div>
+      }
+
+      <div class="modal-fields">
+        <div class="field">
+          <label for="assign-collaborator">Collaborateur <span class="required">*</span></label>
+          <select
+            id="assign-collaborator"
+            [value]="selectedCollaboratorId() ?? ''"
+            (change)="onCollaboratorSelected($any($event.target).value)"
+            [disabled]="collaboratorsLoading()"
+          >
+            <option value="">Saisir ou sélectionner un collaborateur</option>
+            @for (c of collaborators(); track c.id) {
+              <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
+            }
+          </select>
+          @if (!collaboratorsLoading() && collaborators().length === 0) {
+            <small class="muted">Aucun collaborateur disponible</small>
+          }
+          @if (selectedCollaborator()) {
+            <small class="selected-meta">{{ selectedCollaborator()!.firstName }} {{ selectedCollaborator()!.lastName }} - {{ selectedCollaborator()!.jobTitle ?? 'N/A' }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="assign-evaluation">Évaluation <span class="required">*</span></label>
+          <select
+            id="assign-evaluation"
+            [value]="selectedEvaluation()"
+            (change)="selectedEvaluation.set($any($event.target).value)"
+          >
+            <option value="">Saisir ou sélectionner une évaluation</option>
+            @for (item of evaluationOptions; track item) {
+              <option [value]="item">{{ item }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeAssignModal()">Annuler</button>
+        <button type="button" class="btn-primary" (click)="submitAssignment()" [disabled]="!canAssign()">Assigner</button>
+      </div>
+    </div>
+  </div>
+}
+
+

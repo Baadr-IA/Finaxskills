@@ -13,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Random;
 import java.util.List;
 
 @Component
@@ -22,6 +23,7 @@ public class DataInitializer implements ApplicationRunner {
     private final SkillRepository skillRepository;
     private final CollaboratorRepository collaboratorRepository;
     private final CollaboratorSkillRepository assessmentRepository;
+    private final Random random = new Random();
 
     public DataInitializer(
         SkillCategoryRepository categoryRepository,
@@ -70,6 +72,22 @@ public class DataInitializer implements ApplicationRunner {
         Collaborator claire = collaboratorRepository.save(
             new Collaborator("Claire", "Leroy", "claire.leroy@finaxys.com", "DevOps Engineer", "kc-claire-003")
         );
+        // New collaborators
+        Collaborator rabhi = collaboratorRepository.save(
+            new Collaborator("Malak", "RABHI", "malak.rabhi@finaxys.com", "Développeur fullstack", "kc-malak-004")
+        );
+        Collaborator hochlef = collaboratorRepository.save(
+            new Collaborator("Marwa", "HOCHLEF", "marwa.hochlef@finaxys.com", "Développeur fullstack", "kc-marwa-005")
+        );
+        Collaborator chouchene = collaboratorRepository.save(
+            new Collaborator("Mohamed", "Chouchene", "mohamed.chouchene@finaxys.com", "Développeur Java", "kc-mohamed-006")
+        );
+        Collaborator betajeb = collaboratorRepository.save(
+            new Collaborator("Hamza", "BETAJEB", "hamza.betajeb@finaxys.com", "Développeur Java", "kc-hamza-007")
+        );
+        Collaborator abdelkader = collaboratorRepository.save(
+            new Collaborator("Ahmed", "ABDELKADER", "ahmed.abdelkader@finaxys.com", "Développeur fullstack", "kc-ahmed-008")
+        );
 
         // ── Assessments (self + HR) ───────────────────────────────────────────
         addAssessment(alice, springBoot, 5, "My core skill", 5, "Expert level confirmed");
@@ -91,6 +109,44 @@ public class DataInitializer implements ApplicationRunner {
         addAssessment(claire, javaLanguage, 2, "Can read Java services", 2, null);
         addAssessment(claire, pythonLanguage, 4, "Uses Python for tooling and automation", 4, "Very autonomous on Python automation");
         addAssessment(claire, leadership, 3, null, 4, "Good team lead potential");
+
+        // ── New collaborators assessments with random levels ────────────────────
+        // RABHI Malak - Développeur fullstack
+        addRandomAssessment(rabhi, angular);
+        addRandomAssessment(rabhi, react);
+        addRandomAssessment(rabhi, typescript);
+        addRandomAssessment(rabhi, javaLanguage);
+        addRandomAssessment(rabhi, springBoot);
+        addRandomAssessment(rabhi, communication);
+
+        // HOCHLEF Marwa - Développeur fullstack
+        addRandomAssessment(hochlef, angular);
+        addRandomAssessment(hochlef, react);
+        addRandomAssessment(hochlef, typescript);
+        addRandomAssessment(hochlef, springBoot);
+        addRandomAssessment(hochlef, pythonLanguage);
+
+        // Chouchene Mohamed - Développeur Java
+        addRandomAssessment(chouchene, javaLanguage);
+        addRandomAssessment(chouchene, springBoot);
+        addRandomAssessment(chouchene, hibernate);
+        addRandomAssessment(chouchene, pythonLanguage);
+        addRandomAssessment(chouchene, docker);
+
+        // BETAJEB Hamza - Développeur Java
+        addRandomAssessment(betajeb, javaLanguage);
+        addRandomAssessment(betajeb, springBoot);
+        addRandomAssessment(betajeb, hibernate);
+        addRandomAssessment(betajeb, docker);
+        addRandomAssessment(betajeb, leadership);
+
+        // ABDELKADER Ahmed - Développeur fullstack
+        addRandomAssessment(abdelkader, angular);
+        addRandomAssessment(abdelkader, typescript);
+        addRandomAssessment(abdelkader, javaLanguage);
+        addRandomAssessment(abdelkader, springBoot);
+        addRandomAssessment(abdelkader, react);
+        addRandomAssessment(abdelkader, communication);
     }
 
     private void addAssessment(
@@ -104,6 +160,19 @@ public class DataInitializer implements ApplicationRunner {
         cs.setSelfNote(selfNote);
         cs.setHrLevel(hrLevel);
         cs.setHrNote(hrNote);
+        cs.setUpdatedAt(Instant.now());
+        assessmentRepository.save(cs);
+    }
+
+    private void addRandomAssessment(Collaborator collaborator, Skill skill) {
+        int selfLevel = 1 + random.nextInt(5); // Random level 1-5
+        int hrLevel = 1 + random.nextInt(5);   // Random level 1-5
+        String selfNote = null;
+        String hrNote = null;
+
+        CollaboratorSkill cs = new CollaboratorSkill(collaborator, skill);
+        cs.setSelfLevel(selfLevel);
+        cs.setHrLevel(hrLevel);
         cs.setUpdatedAt(Instant.now());
         assessmentRepository.save(cs);
     }

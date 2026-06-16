@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Table;
 
 @Entity
@@ -24,6 +26,10 @@ public class Skill {
     @Column(length = 255)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "level", length = 20, nullable = false)
+    private Level level = Level.NIVEAU_0;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private SkillCategory category;
@@ -31,10 +37,16 @@ public class Skill {
     protected Skill() {
     }
 
-    public Skill(String name, String description, SkillCategory category) {
+    public Skill(String name, String description, SkillCategory category, Level level) {
         this.name = name;
         this.description = description;
         this.category = category;
+        this.level = level == null ? Level.NIVEAU_1 : level;
+    }
+
+    // Backward-compatible constructor used in data initialization and tests
+    public Skill(String name, String description, SkillCategory category) {
+        this(name, description, category, Level.NIVEAU_1);
     }
 
     public Long getId() { return id; }
@@ -44,6 +56,9 @@ public class Skill {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Level getLevel() { return level; }
+    public void setLevel(Level level) { this.level = level; }
 
     public SkillCategory getCategory() { return category; }
     public void setCategory(SkillCategory category) { this.category = category; }

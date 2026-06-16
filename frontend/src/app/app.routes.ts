@@ -22,6 +22,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/collaborateurs/collaborateurs').then((m) => m.Collaborateurs),
   },
   {
+    path: 'evaluations',
+    canActivate: [authGuard],
+    data: { permission: readCollaborators },
+    loadComponent: () => import('./pages/evaluations/evaluations').then((m) => m.Evaluations),
+  },
+  {
     path: 'collaborateurs/:id',
     canActivate: [authGuard],
     data: { permission: readCollaborators },
