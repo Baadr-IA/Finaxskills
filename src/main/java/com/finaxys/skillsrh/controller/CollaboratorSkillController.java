@@ -8,6 +8,7 @@ import com.finaxys.skillsrh.domain.Skill;
 import com.finaxys.skillsrh.repository.CollaboratorRepository;
 import com.finaxys.skillsrh.repository.CollaboratorSkillRepository;
 import com.finaxys.skillsrh.repository.SkillRepository;
+import com.finaxys.skillsrh.service.CollaboratorProvisioningService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -34,15 +35,18 @@ public class CollaboratorSkillController {
     private final CollaboratorRepository collaboratorRepository;
     private final SkillRepository skillRepository;
     private final CollaboratorSkillRepository assessmentRepository;
+    private final CollaboratorProvisioningService collaboratorProvisioningService;
 
     public CollaboratorSkillController(
         CollaboratorRepository collaboratorRepository,
         SkillRepository skillRepository,
-        CollaboratorSkillRepository assessmentRepository
+        CollaboratorSkillRepository assessmentRepository,
+        CollaboratorProvisioningService collaboratorProvisioningService
     ) {
         this.collaboratorRepository = collaboratorRepository;
         this.skillRepository = skillRepository;
         this.assessmentRepository = assessmentRepository;
+        this.collaboratorProvisioningService = collaboratorProvisioningService;
     }
 
     // ── HR view: all assessments for a collaborator ──────────────────────────
@@ -83,7 +87,7 @@ public class CollaboratorSkillController {
     @GetMapping("/me/skills")
     @PreAuthorize("@permissions.has(authentication, 'SKILL_ASSESSMENTS', 'READ', 'SELF')")
     public List<AssessmentResponse> mySkills(Authentication authentication) {
-        Collaborator me = requireByKeycloakId(authentication.getName());
+        Collaborator me = collaboratorProvisioningService.ensureCollaborator(authentication);
         return assessmentRepository.findByCollaboratorId(me.getId()).stream()
             .map(this::toResponse)
             .toList();
@@ -96,7 +100,7 @@ public class CollaboratorSkillController {
         @PathVariable Long skillId,
         @Valid @RequestBody SelfAssessmentRequest req
     ) {
-        Collaborator me = requireByKeycloakId(authentication.getName());
+        Collaborator me = collaboratorProvisioningService.ensureCollaborator(authentication);
         CollaboratorSkill assessment = getOrCreate(me.getId(), skillId);
         assessment.setSelfLevel(req.selfLevel());
         assessment.setSelfNote(req.selfNote());
@@ -109,12 +113,6 @@ public class CollaboratorSkillController {
     private Collaborator requireCollaborator(Long id) {
         return collaboratorRepository.findById(id)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "collaborator-not-found", "Collaborator not found"));
-    }
-
-    private Collaborator requireByKeycloakId(String keycloakId) {
-        return collaboratorRepository.findByKeycloakId(keycloakId)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "collaborator-not-found",
-                "No collaborator profile linked to your account — contact your HR administrator"));
     }
 
     private Skill requireSkill(Long id) {

@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.finaxys.skillsrh.service.CollaboratorProvisioningService;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -20,13 +21,20 @@ import java.util.TreeSet;
 public class UserInfoController {
 
     private final PermissionEvaluator permissionEvaluator;
+    private final CollaboratorProvisioningService collaboratorProvisioningService;
 
-    public UserInfoController(PermissionEvaluator permissionEvaluator) {
+    public UserInfoController(
+        PermissionEvaluator permissionEvaluator,
+        CollaboratorProvisioningService collaboratorProvisioningService
+    ) {
         this.permissionEvaluator = permissionEvaluator;
+        this.collaboratorProvisioningService = collaboratorProvisioningService;
     }
 
     @GetMapping("/me")
     public UserInfoResponse me(Authentication authentication) {
+        collaboratorProvisioningService.ensureCollaborator(authentication);
+
         List<String> profileKeys = permissionEvaluator.resolveProfileKeys(authentication).stream()
             .sorted()
             .toList();
@@ -77,4 +85,3 @@ public class UserInfoController {
         }
     }
 }
-
