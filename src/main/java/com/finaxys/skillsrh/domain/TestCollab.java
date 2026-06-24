@@ -55,6 +55,12 @@ public class TestCollab {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
+    @Column(name = "generated_at")
+    private Instant generatedAt;
+
+    @Column(name = "score")
+    private Integer score;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -104,6 +110,14 @@ public class TestCollab {
         return dueDate;
     }
 
+    public Instant getGeneratedAt() {
+        return generatedAt;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -114,6 +128,22 @@ public class TestCollab {
 
     public void touch() {
         this.updatedAt = Instant.now();
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+    }
+
+    public void setGeneratedAt(Instant generatedAt) {
+        this.generatedAt = generatedAt;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
     }
 
     @PrePersist

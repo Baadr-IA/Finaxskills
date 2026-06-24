@@ -30,6 +30,35 @@ export type MyEvaluationDto = {
   availableActions: string[];
 };
 
+export type QuizOptionDto = {
+  code: string;
+  text: string;
+  correct: boolean;
+};
+
+export type QuizQuestionDto = {
+  questionId: number;
+  question: string;
+  options: QuizOptionDto[];
+};
+
+export type StartEvaluationDto = {
+  quizTitle: string;
+  questions: QuizQuestionDto[];
+};
+
+export type SubmitEvaluationAnswersRequest = {
+  answers: { questionIndex: number; optionCode: string }[];
+};
+
+export type SubmitEvaluationResultDto = {
+  score: number;
+  answeredQuestions: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  status: string;
+};
+
 export type CreateEvaluationRequest = {
   collaboratorId: number;
   evaluationName: string;
@@ -55,5 +84,13 @@ export class EvaluationService {
 
   createAssignment(payload: CreateEvaluationRequest): Promise<EvaluationDto> {
     return firstValueFrom(this.http.post<EvaluationDto>('/api/evaluations', payload));
+  }
+
+  startMine(assignmentId: number): Promise<StartEvaluationDto> {
+    return firstValueFrom(this.http.post<StartEvaluationDto>(`/api/me/evaluations/${assignmentId}/start`, {}));
+  }
+
+  submitMineAnswers(assignmentId: number, payload: SubmitEvaluationAnswersRequest): Promise<SubmitEvaluationResultDto> {
+    return firstValueFrom(this.http.post<SubmitEvaluationResultDto>(`/api/me/evaluations/${assignmentId}/answers`, payload));
   }
 }

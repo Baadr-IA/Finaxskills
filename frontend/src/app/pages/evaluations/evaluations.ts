@@ -208,5 +208,3 @@ function normalizeStatus(status: string | null | undefined): EvalStatus {
   if (s.includes('compl') || s.includes('complete') || s.includes('completed')) return 'completed';
   return 'pending';
 }
-
-

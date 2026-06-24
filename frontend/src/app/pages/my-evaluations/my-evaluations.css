@@ -331,3 +331,253 @@
 .start-btn:hover {
   background: #ea580c;
 }
+
+.start-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.completion-modal {
+  position: relative;
+  width: min(100%, 560px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.8rem 1.5rem 1.6rem;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.completion-icon {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 0.8rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #d1fae5;
+  color: #059669;
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.completion-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.completion-subtitle {
+  margin: 0.35rem 0 1.1rem;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.completion-score-card {
+  background: #f3f4f6;
+  border-radius: 14px;
+  padding: 1.2rem 1rem;
+}
+
+.completion-score-label {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.completion-score-value {
+  margin: 0.45rem 0 0.2rem;
+  font-weight: 800;
+}
+
+.completion-score-correct {
+  color: #f97316;
+  font-size: 3.4rem;
+  line-height: 1;
+}
+
+.completion-score-total {
+  color: #9ca3af;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.completion-score-percent {
+  margin: 0.2rem 0 0;
+  color: #6b7280;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.quiz-overlay {
+  position: fixed;
+  inset: 0;
+  background: #f7f7f7;
+  z-index: 1100;
+  overflow: auto;
+}
+
+.quiz-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.2rem;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.quiz-title {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.quiz-subtitle {
+  margin: 0.2rem 0 0;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.quiz-close {
+  border: none;
+  background: transparent;
+  font-size: 2rem;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.quiz-progress-row {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quiz-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: #f97316;
+  border-radius: inherit;
+}
+
+.quiz-progress-label {
+  color: #4b5563;
+  font-weight: 700;
+  min-width: 40px;
+  text-align: right;
+}
+
+.quiz-card {
+  margin-top: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 1.6rem;
+}
+
+.quiz-section {
+  margin: 0 0 0.5rem;
+  color: #f97316;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.quiz-question {
+  margin: 0 0 1.25rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.quiz-options {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.quiz-option {
+  width: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.quiz-option-code {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 2px solid #d1d5db;
+  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.quiz-option-selected {
+  border-color: #fb923c;
+  background: #fff7ed;
+}
+
+.quiz-option-selected .quiz-option-code {
+  border-color: #f97316;
+  background: #f97316;
+  color: #fff;
+}
+
+.quiz-option-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.quiz-actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.quiz-prev,
+.quiz-next {
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quiz-prev {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.quiz-next {
+  background: #f97316;
+  color: #fff;
+}
+
+.quiz-prev:disabled,
+.quiz-next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EvaluationService, MyEvaluationDto } from '../../core/services/evaluation.service';
+import { EvaluationService, MyEvaluationDto, StartEvaluationDto } from '../../core/services/evaluation.service';
 
-type EvalStatus = 'pending' | 'in_progress' | 'completed';
+type EvalStatus = 'pending' | 'completed';
 
 type Evaluation = {
   id: number;
@@ -17,6 +17,20 @@ type Evaluation = {
   availableActions: string[];
 };
 
+type QuizQuestion = {
+  questionId: number;
+  question: string;
+  options: { code: string; text: string; correct: boolean }[];
+};
+
+type CompletionResult = {
+  evaluation: string;
+  competence: string;
+  correctAnswers: number;
+  totalQuestions: number;
+  percentage: number;
+};
+
 @Component({
   selector: 'app-my-evaluations',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,9 +40,19 @@ type Evaluation = {
 })
 export class MyEvaluations {
   readonly all = signal<Evaluation[]>([]);
-  readonly filter = signal<'all' | 'pending' | 'in_progress' | 'completed'>('all');
+  readonly filter = signal<'all' | 'pending' | 'completed'>('all');
   readonly isLoading = signal(true);
   readonly selectedForStart = signal<Evaluation | null>(null);
+  readonly activeAssignmentId = signal<number | null>(null);
+  readonly activeEvaluation = signal<string | null>(null);
+  readonly activeCompetence = signal<string | null>(null);
+  readonly quizTitle = signal<string | null>(null);
+  readonly quizQuestions = signal<QuizQuestion[]>([]);
+  readonly currentQuestionIndex = signal(0);
+  readonly selectedByQuestion = signal<Record<number, string>>({});
+  readonly isStartingQuiz = signal(false);
+  readonly isSubmittingQuiz = signal(false);
+  readonly completionResult = signal<CompletionResult | null>(null);
 
   private readonly evaluationService = inject(EvaluationService);
 
@@ -44,7 +68,6 @@ export class MyEvaluations {
     return {
       all: list.length,
       pending: list.filter((e) => e.status === 'pending').length,
-      in_progress: list.filter((e) => e.status === 'in_progress').length,
       completed: list.filter((e) => e.status === 'completed').length,
     };
   });
@@ -53,12 +76,12 @@ export class MyEvaluations {
     void this.load();
   }
 
-  setFilter(f: 'all' | 'pending' | 'in_progress' | 'completed'): void {
+  setFilter(f: 'all' | 'pending' | 'completed'): void {
     this.filter.set(f);
   }
 
   onFilterChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as 'all' | 'pending' | 'in_progress' | 'completed';
+    const value = (event.target as HTMLSelectElement).value as 'all' | 'pending' | 'completed';
     this.setFilter(value);
     void this.load();
   }
@@ -94,7 +117,6 @@ export class MyEvaluations {
   statusLabel(status: EvalStatus): string {
     const labels: Record<EvalStatus, string> = {
       pending: 'ASSIGNÉ',
-      in_progress: 'EN COURS',
       completed: 'COMPLÉTÉ',
     };
     return labels[status];
@@ -103,7 +125,6 @@ export class MyEvaluations {
   statusClass(status: EvalStatus): string {
     const classes: Record<EvalStatus, string> = {
       pending: 'status-badge status-pending',
-      in_progress: 'status-badge status-in-progress',
       completed: 'status-badge status-completed',
     };
     return classes[status];
@@ -118,10 +139,22 @@ export class MyEvaluations {
   }
 
   startEvaluation(): void {
+    void this.startEvaluationAsync();
+  }
+
+  private async startEvaluationAsync(): Promise<void> {
     const evaluation = this.selectedForStart();
-    if (!evaluation) return;
-    console.log('Starting test:', evaluation.evaluation);
-    this.closeStartModal();
+    if (!evaluation || this.isStartingQuiz()) return;
+    this.isStartingQuiz.set(true);
+    try {
+      const quiz = await this.evaluationService.startMine(evaluation.id);
+      this.applyQuizSession(quiz);
+      this.closeStartModal();
+    } catch (err) {
+      console.error('Failed to start evaluation:', err);
+    } finally {
+      this.isStartingQuiz.set(false);
+    }
   }
 
   onViewTest(evaluation: Evaluation): void {
@@ -138,16 +171,101 @@ export class MyEvaluations {
     if (normalized === 'NIVEAU 4') return '4 · Expert';
     return levelDeclared;
   }
+
+  closeQuiz(): void {
+    this.activeAssignmentId.set(null);
+    this.activeEvaluation.set(null);
+    this.activeCompetence.set(null);
+    this.quizTitle.set(null);
+    this.quizQuestions.set([]);
+    this.currentQuestionIndex.set(0);
+    this.selectedByQuestion.set({});
+  }
+
+  closeCompletionModal(): void {
+    this.completionResult.set(null);
+  }
+
+  selectOption(questionIndex: number, optionCode: string): void {
+    this.selectedByQuestion.update((state) => ({ ...state, [questionIndex]: optionCode }));
+  }
+
+  previousQuestion(): void {
+    this.currentQuestionIndex.update((index) => Math.max(0, index - 1));
+  }
+
+  nextQuestion(): void {
+    this.currentQuestionIndex.update((index) => Math.min(this.quizQuestions().length - 1, index + 1));
+  }
+
+  finishEvaluation(): void {
+    void this.finishEvaluationAsync();
+  }
+
+  isOptionSelected(questionIndex: number, optionCode: string): boolean {
+    return this.selectedByQuestion()[questionIndex] === optionCode;
+  }
+
+  questionProgressPercent(): number {
+    const total = this.quizQuestions().length || 1;
+    return Math.round(((this.currentQuestionIndex() + 1) / total) * 100);
+  }
+
+  isLastQuestion(): boolean {
+    return this.currentQuestionIndex() >= this.quizQuestions().length - 1;
+  }
+
+  private applyQuizSession(quiz: StartEvaluationDto): void {
+    const selected = this.selectedForStart();
+    this.activeAssignmentId.set(selected?.id ?? null);
+    this.activeEvaluation.set(selected?.evaluation ?? quiz.quizTitle);
+    this.activeCompetence.set(selected?.competenceEvaluated ?? '');
+    this.quizTitle.set(quiz.quizTitle);
+    this.quizQuestions.set((quiz.questions ?? []).map((q) => ({
+      questionId: q.questionId,
+      question: q.question,
+      options: q.options ?? [],
+    })));
+    this.currentQuestionIndex.set(0);
+    this.selectedByQuestion.set({});
+  }
+
+  private async finishEvaluationAsync(): Promise<void> {
+    const assignmentId = this.activeAssignmentId();
+    if (!assignmentId || this.isSubmittingQuiz()) return;
+    this.isSubmittingQuiz.set(true);
+    try {
+      const answers = this.quizQuestions().map((_, index) => ({
+        questionIndex: index + 1,
+        optionCode: this.selectedByQuestion()[index] ?? '',
+      }));
+      const result = await this.evaluationService.submitMineAnswers(assignmentId, { answers });
+      const totalQuestions = result.totalQuestions ?? 0;
+      const correctAnswers = result.correctAnswers ?? 0;
+      const percentage = totalQuestions > 0 ? Math.round((correctAnswers * 100) / totalQuestions) : 0;
+      this.completionResult.set({
+        evaluation: this.activeEvaluation() ?? this.quizTitle() ?? 'Évaluation',
+        competence: this.activeCompetence() ?? '',
+        correctAnswers,
+        totalQuestions,
+        percentage,
+      });
+      this.closeQuiz();
+      await this.load();
+    } catch (err) {
+      console.error('Failed to submit evaluation answers:', err);
+    } finally {
+      this.isSubmittingQuiz.set(false);
+    }
+  }
 }
 
 function normalizeStatus(status: string | null | undefined): EvalStatus {
   if (!status) return 'pending';
   const s = status.trim().toLowerCase();
   if (s === 'en attente' || s === 'en_attente' || s === 'en-attente' || s === 'pending') return 'pending';
-  if (s === 'en cours' || s === 'en_cours' || s === 'en-cours' || s === 'in_progress') return 'in_progress';
   if (s === 'complété' || s === 'complete' || s === 'complet' || s === 'completed') return 'completed';
   if (s.includes('attente') || s.includes('pending')) return 'pending';
-  if (s.includes('cours') || s.includes('in_progress') || s.includes('in progress')) return 'in_progress';
   if (s.includes('compl') || s.includes('complete') || s.includes('completed')) return 'completed';
   return 'pending';
 }

@@ -8,7 +8,6 @@
       <select class="status-filter" [value]="filter()" (change)="onFilterChange($event)">
         <option value="all">Filtrer par statut</option>
         <option value="pending">ASSIGNÉ</option>
-        <option value="in_progress">EN COURS</option>
         <option value="completed">COMPLÉTÉ</option>
       </select>
     </div>
@@ -128,7 +127,86 @@
       </div>
 
       <p class="start-note">Une fois lancée, l’évaluation doit être complétée.</p>
-      <button type="button" class="start-btn" (click)="startEvaluation()">▶ Commencer l’évaluation</button>
+      <button type="button" class="start-btn" (click)="startEvaluation()" [disabled]="isStartingQuiz()">
+        {{ isStartingQuiz() ? 'Chargement...' : '▶ Commencer l’évaluation' }}
+      </button>
+    </div>
+  </div>
+}
+
+@if (quizTitle() && quizQuestions().length > 0) {
+  <div class="quiz-overlay">
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <div>
+          <h2 class="quiz-title">{{ quizTitle() }}</h2>
+          <p class="quiz-subtitle">Question {{ currentQuestionIndex() + 1 }} sur {{ quizQuestions().length }}</p>
+        </div>
+        <button class="quiz-close" type="button" (click)="closeQuiz()" aria-label="Fermer">×</button>
+      </div>
+
+      <div class="quiz-progress-row">
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" [style.width.%]="questionProgressPercent()"></div>
+        </div>
+        <span class="quiz-progress-label">{{ questionProgressPercent() }}%</span>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-section">QUESTION</p>
+        <p class="quiz-question">{{ quizQuestions()[currentQuestionIndex()].question }}</p>
+
+        <div class="quiz-options">
+          @for (opt of quizQuestions()[currentQuestionIndex()].options; track opt.code) {
+            <button
+              type="button"
+              class="quiz-option"
+              [class.quiz-option-selected]="isOptionSelected(currentQuestionIndex(), opt.code)"
+              (click)="selectOption(currentQuestionIndex(), opt.code)"
+            >
+              <span class="quiz-option-code">{{ opt.code }}</span>
+              <span class="quiz-option-text">{{ opt.text }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="quiz-actions">
+        <button type="button" class="quiz-prev" (click)="previousQuestion()" [disabled]="currentQuestionIndex() === 0">
+          Question précédente
+        </button>
+        @if (isLastQuestion()) {
+          <button type="button" class="quiz-next" (click)="finishEvaluation()" [disabled]="isSubmittingQuiz()">
+            {{ isSubmittingQuiz() ? 'Envoi...' : 'Terminer l’évaluation' }}
+          </button>
+        } @else {
+          <button type="button" class="quiz-next" (click)="nextQuestion()">
+            Question suivante
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (completionResult(); as result) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeCompletionModal()">
+    <div class="completion-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" (click)="closeCompletionModal()" aria-label="Fermer">×</button>
+      <div class="completion-icon">✓</div>
+      <h2 class="completion-title">Évaluation terminée</h2>
+      <p class="completion-subtitle">
+        {{ result.evaluation }}@if (result.competence && result.competence !== 'N/A') { · {{ result.competence }} }
+      </p>
+
+      <div class="completion-score-card">
+        <p class="completion-score-label">VOTRE SCORE</p>
+        <p class="completion-score-value">
+          <span class="completion-score-correct">{{ result.correctAnswers }}</span>
+          <span class="completion-score-total">/ {{ result.totalQuestions }}</span>
+        </p>
+        <p class="completion-score-percent">{{ result.percentage }}% de bonnes réponses</p>
+      </div>
     </div>
   </div>
 }

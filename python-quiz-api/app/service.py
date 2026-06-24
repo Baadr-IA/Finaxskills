@@ -2,65 +2,44 @@ from __future__ import annotations
 
 import json
 import os
-import re
+import random
 import urllib.error
 import urllib.request
+import uuid
 from dataclasses import dataclass
-from pathlib import Path
+from datetime import datetime, timezone
 from typing import Any
 
 from .models import QuizGenerationRequest, QuizGenerationResponse
 
 
 VALID_OPTIONS = {"A", "B", "C", "D"}
-GENERATION_PROMPT_PREFIX = """
-You are a senior technical assessment designer specialized in building fair, level-based multiple-choice quizzes for employee technical evaluation.
 
-Your task is to generate a quiz block for the requested skill and level.
-
-You must use the provided referential as the single source of truth:
-- use the skill description
-- use the target level description
-- use the listed topics
-- use the expected outcomes ("attendus")
-- align the real difficulty with the requested level only
-- do not generate questions outside the referential scope
-
-Question design rules:
-- generate exactly the requested number of questions
-- each question must assess one concrete expected outcome from the referential
-- each question must have exactly 4 options: A, B, C, D
-- exactly one option must be correct
-- incorrect options must be plausible and technically credible
-- avoid ambiguous wording
-- avoid trivia and overly academic questions
-- prioritize professional, practical understanding
-- explanations must clearly justify why the correct answer is correct
-
-Difficulty rules:
-- do not mix beginner and expert expectations in the same block
-- keep the vocabulary, traps, and reasoning depth aligned with the requested level
-- if the level is intermediate, questions must require understanding, not simple memorization
-
-Output rules:
-- return valid JSON only
-- no markdown
-- no comments
-- no prose outside JSON
-- strictly follow the required schema
-
-Context payload:
+GENERATION_PROMPT = """
+You are a senior technical quiz generator.
+Generate a brand-new multiple-choice quiz every time.
+Do not reuse previous questions, and do not rely on any static referential.
+Return JSON only with this schema:
 {
-  "skill": "...",
-  "requestedLevel": ...,
-  "questionCount": ...,
-  "optionalInstructions": "...",
-  "difficulty": { ... },
-  "topics": [...],
-  "generationRules": {...},
-  "fewShotExamples": [...],
-  "outputSchema": {...}
+  "quizTitle": "string",
+  "questions": [
+    {
+      "question": "string",
+      "options": [
+        {"code":"A","text":"string","correct":true|false},
+        {"code":"B","text":"string","correct":true|false},
+        {"code":"C","text":"string","correct":true|false},
+        {"code":"D","text":"string","correct":true|false}
+      ]
+    }
+  ]
 }
+Rules:
+- exactly one correct option per question
+- exactly 4 options A/B/C/D
+- generate exactly the requested question count
+- keep difficulty aligned to requested level (1 beginner -> 5 expert)
+- practical/professional wording, no trivia
 """.strip()
 
 
@@ -72,48 +51,22 @@ class QuizApiError(Exception):
 
 
 def generate_block(request: QuizGenerationRequest) -> QuizGenerationResponse:
-    referential = load_referential(normalize_skill_key(request.skill))
-    level_definition = get_level_definition(referential, request.level)
+    generated = None
     fallback_reason = None
-    generation_source = "fallback"
-
     if llm_generation_enabled():
         try:
-            generated = generate_with_llm(request, referential, level_definition)
-            validate_generated_payload(generated, request.questionCount)
-            verify_generated_payload(generated, referential, request.level)
-            generation_source = "llm"
-            return build_response(generated, level_definition, generation_source, fallback_reason)
+            generated = generate_with_llm(request)
         except QuizApiError as error:
             fallback_reason = error.message
-
-    generated = build_fallback_payload(referential, request.level, request.questionCount)
-    return build_response(generated, level_definition, generation_source, fallback_reason)
+    if generated is None:
+        generated = generate_fallback_payload(request)
+        fallback_reason = fallback_reason or "Synthetic fallback quiz generation was used"
+    validate_generated_payload(generated, request.questionCount)
+    return build_response(generated, request.level, fallback_reason)
 
 
 def health_payload() -> dict[str, str]:
     return {"status": "ok"}
-
-
-def load_referential(skill_key: str) -> dict[str, Any]:
-    referential_dir = Path(os.getenv("QUIZ_REFERENTIAL_DIR", "referentials"))
-    referential_path = referential_dir / f"{skill_key}_referential.json"
-    if not referential_path.exists():
-        raise QuizApiError("skill-unknown", f"No referential exists for skill '{skill_key}'")
-
-    with referential_path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def normalize_skill_key(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
-
-
-def get_level_definition(referential: dict[str, Any], level: int) -> dict[str, Any]:
-    for level_definition in referential.get("levels", []):
-        if int(level_definition.get("level", 0)) == level:
-            return level_definition
-    raise QuizApiError("invalid-level", f"Level '{level}' is not available in the referential")
 
 
 def llm_generation_enabled() -> bool:
@@ -123,121 +76,24 @@ def llm_generation_enabled() -> bool:
     )
 
 
-def llm_verifier_enabled() -> bool:
-    return (
-        os.getenv("QUIZ_ENABLE_LLM_VERIFIER", "true").lower() == "true"
-        and bool(os.getenv("OPENAI_API_KEY"))
+def generate_with_llm(request: QuizGenerationRequest) -> dict[str, Any]:
+    nonce = f"{uuid.uuid4()}-{datetime.now(timezone.utc).isoformat()}"
+    user_prompt = json.dumps(
+        {
+            "skill": request.skill,
+            "level": request.level,
+            "questionCount": request.questionCount,
+            "instructions": request.instructions,
+            "nonce": nonce,
+            "strictUniquenessInstruction": "Questions must be different from prior generations for same skill/level.",
+        },
+        ensure_ascii=False,
     )
-
-
-def generate_with_llm(
-    request: QuizGenerationRequest,
-    referential: dict[str, Any],
-    level_definition: dict[str, Any],
-) -> dict[str, Any]:
-    system_prompt = GENERATION_PROMPT_PREFIX
-    user_prompt = build_generation_prompt(request, referential, level_definition)
-    response_text = call_openai_chat_completion(system_prompt, user_prompt)
-
+    response_text = call_openai_chat_completion(GENERATION_PROMPT, user_prompt)
     try:
         return json.loads(extract_json(response_text))
     except json.JSONDecodeError as error:
         raise QuizApiError("invalid-generator-output", "The LLM returned malformed JSON") from error
-
-
-def build_generation_prompt(
-    request: QuizGenerationRequest,
-    referential: dict[str, Any],
-    level_definition: dict[str, Any],
-) -> str:
-    topics = level_definition.get("topics", [])
-    few_shot_examples = []
-    for topic in topics[: min(3, len(topics))]:
-        sample = topic.get("exemple_question", {})
-        few_shot_examples.append(
-            {
-                "topic": topic.get("name"),
-                "targetedOutcome": first_expected_outcome(topic),
-                "text": sample.get("enonce"),
-                "options": {
-                    "A": sample.get("choix_A"),
-                    "B": sample.get("choix_B"),
-                    "C": sample.get("choix_C"),
-                    "D": sample.get("choix_D"),
-                },
-                "correctOption": sample.get("bonne_reponse"),
-                "explanation": sample.get("explication"),
-            }
-        )
-
-    prompt_payload = {
-        "skill": referential.get("skill"),
-        "requestedLevel": request.level,
-        "questionCount": request.questionCount,
-        "optionalInstructions": request.instructions,
-        "difficulty": {
-            "label": level_definition.get("label"),
-            "description": level_definition.get("description"),
-        },
-        "topics": [
-            {
-                "name": topic.get("name"),
-                "expectedOutcomes": topic.get("attendus", []),
-            }
-            for topic in topics
-        ],
-        "generationRules": referential.get("test_generation_instructions", {}),
-        "fewShotExamples": few_shot_examples,
-        "outputSchema": {
-            "title": "string",
-            "questions": [
-                {
-                    "id": "string",
-                    "topic": "string",
-                    "targetedOutcome": "string",
-                    "text": "string",
-                    "optionA": "string",
-                    "optionB": "string",
-                    "optionC": "string",
-                    "optionD": "string",
-                    "correctOption": "A|B|C|D",
-                    "explanation": "string",
-                }
-            ],
-        },
-    }
-
-    return json.dumps(prompt_payload, ensure_ascii=False)
-
-
-def verify_generated_payload(generated: dict[str, Any], referential: dict[str, Any], level: int) -> None:
-    if not llm_verifier_enabled():
-        return
-
-    system_prompt = (
-        "You validate generated technical multiple-choice questions. "
-        "Return JSON only with fields approved:boolean and reason:string."
-    )
-    user_prompt = json.dumps(
-        {
-            "skill": referential.get("skill"),
-            "level": level,
-            "questions": generated.get("questions", []),
-        },
-        ensure_ascii=False,
-    )
-    response_text = call_openai_chat_completion(system_prompt, user_prompt)
-
-    try:
-        verdict = json.loads(extract_json(response_text))
-    except json.JSONDecodeError as error:
-        raise QuizApiError("coherence-check-failed", "The coherence verifier returned malformed JSON") from error
-
-    if verdict.get("approved") is not True:
-        raise QuizApiError(
-            "coherence-check-failed",
-            str(verdict.get("reason", "The generated quiz block was rejected by the coherence verifier")),
-        )
 
 
 def call_openai_chat_completion(system_prompt: str, user_prompt: str) -> str:
@@ -247,7 +103,8 @@ def call_openai_chat_completion(system_prompt: str, user_prompt: str) -> str:
 
     request_body = {
         "model": os.getenv("QUIZ_OPENAI_MODEL", "gpt-4.1-mini"),
-        "temperature": 0.2,
+        "temperature": float(os.getenv("QUIZ_OPENAI_TEMPERATURE", "0.85")),
+        "top_p": float(os.getenv("QUIZ_OPENAI_TOP_P", "0.9")),
         "response_format": {"type": "json_object"},
         "messages": [
             {"role": "system", "content": system_prompt},
@@ -266,7 +123,7 @@ def call_openai_chat_completion(system_prompt: str, user_prompt: str) -> str:
     )
 
     try:
-        timeout = float(os.getenv("QUIZ_OPENAI_TIMEOUT_SECONDS", "8"))
+        timeout = float(os.getenv("QUIZ_OPENAI_TIMEOUT_SECONDS", "12"))
         with urllib.request.urlopen(http_request, timeout=timeout) as response:
             payload = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
@@ -295,119 +152,148 @@ def validate_generated_payload(generated: dict[str, Any], expected_question_coun
         raise QuizApiError("invalid-generator-output", "The generated payload does not contain the expected number of questions")
 
     for question in questions:
-        required_fields = {
-            "id",
-            "topic",
-            "targetedOutcome",
-            "text",
-            "optionA",
-            "optionB",
-            "optionC",
-            "optionD",
-            "correctOption",
-            "explanation",
-        }
-        if not required_fields.issubset(question):
-            raise QuizApiError("invalid-generator-output", "A generated question is missing required fields")
-        if str(question["correctOption"]).upper() not in VALID_OPTIONS:
-            raise QuizApiError("invalid-generator-output", "A generated question contains an invalid correct option")
+        if not isinstance(question, dict):
+            raise QuizApiError("invalid-generator-output", "A generated question has an invalid format")
+        if not question.get("question"):
+            raise QuizApiError("invalid-generator-output", "A generated question is missing question text")
+        options = question.get("options")
+        if not isinstance(options, list) or len(options) != 4:
+            raise QuizApiError("invalid-generator-output", "A generated question must contain exactly 4 options")
+        seen_codes = set()
+        correct_count = 0
+        for option in options:
+            code = str(option.get("code", "")).upper()
+            if code not in VALID_OPTIONS:
+                raise QuizApiError("invalid-generator-output", "An option code is invalid")
+            if code in seen_codes:
+                raise QuizApiError("invalid-generator-output", "Option codes must be unique per question")
+            seen_codes.add(code)
+            if not option.get("text"):
+                raise QuizApiError("invalid-generator-output", "An option text is missing")
+            if option.get("correct") is True:
+                correct_count += 1
+        if correct_count != 1:
+            raise QuizApiError("invalid-generator-output", "Each question must contain exactly one correct option")
 
 
-def build_fallback_payload(referential: dict[str, Any], level: int, question_count: int) -> dict[str, Any]:
-    selected_questions: list[dict[str, Any]] = []
-    seen_texts: set[str] = set()
-    candidate_levels = [level]
-    for distance in range(1, 5):
-        if level - distance >= 1:
-            candidate_levels.append(level - distance)
-        if level + distance <= 5:
-            candidate_levels.append(level + distance)
-
-    index = 1
-    for candidate_level in candidate_levels:
-        try:
-            level_definition = get_level_definition(referential, candidate_level)
-        except QuizApiError:
-            continue
-
-        for topic in level_definition.get("topics", []):
-            sample = topic.get("exemple_question") or {}
-            text = sample.get("enonce")
-            if not text or text in seen_texts:
-                continue
-
-            selected_questions.append(
-                {
-                    "id": f"q{index}",
-                    "topic": topic.get("name"),
-                    "targetedOutcome": first_expected_outcome(topic),
-                    "text": text,
-                    "optionA": sample.get("choix_A"),
-                    "optionB": sample.get("choix_B"),
-                    "optionC": sample.get("choix_C"),
-                    "optionD": sample.get("choix_D"),
-                    "correctOption": sample.get("bonne_reponse"),
-                    "explanation": sample.get("explication"),
-                }
-            )
-            seen_texts.add(text)
-            index += 1
-            if len(selected_questions) == question_count:
-                return {
-                    "title": f"{referential.get('skill')} - Niveau {level}",
-                    "questions": selected_questions,
-                }
-
-    raise QuizApiError("invalid-generator-output", "The referential does not contain enough fallback questions")
-
-
-def first_expected_outcome(topic: dict[str, Any]) -> str:
-    outcomes = topic.get("attendus", [])
-    return outcomes[0] if outcomes else str(topic.get("name", "Expected outcome"))
-
-
-def build_response(
-    generated: dict[str, Any],
-    level_definition: dict[str, Any],
-    generation_source: str,
-    fallback_reason: str | None,
-) -> QuizGenerationResponse:
+def build_response(generated: dict[str, Any], level: int, fallback_reason: str | None) -> QuizGenerationResponse:
+    raw_questions = generated.get("questions", [])
     questions = []
     expected_answers = []
-    for question in generated.get("questions", []):
-        correct_option = str(question["correctOption"]).upper()
-        expected_answers.append({"questionId": question["id"], "option": correct_option})
+
+    for index, question in enumerate(raw_questions, start=1):
+        options = {str(opt["code"]).upper(): opt["text"] for opt in question["options"]}
+        correct_option = next(str(opt["code"]).upper() for opt in question["options"] if opt.get("correct") is True)
+        question_id = f"q{index}"
+        expected_answers.append({"questionId": question_id, "option": correct_option})
         questions.append(
             {
-                "id": question["id"],
-                "topic": question["topic"],
-                "targetedOutcome": question["targetedOutcome"],
-                "text": question["text"],
-                "optionA": question["optionA"],
-                "optionB": question["optionB"],
-                "optionC": question["optionC"],
-                "optionD": question["optionD"],
-                "explanation": question["explanation"],
+                "id": question_id,
+                "topic": str(generated.get("quizTitle") or "General"),
+                "targetedOutcome": f"Level {level} mastery",
+                "text": question["question"],
+                "optionA": options.get("A"),
+                "optionB": options.get("B"),
+                "optionC": options.get("C"),
+                "optionD": options.get("D"),
+                "explanation": "Generated by LLM",
             }
         )
 
     return QuizGenerationResponse.model_validate(
         {
-            "title": generated.get("title") or f"Quiz niveau {level_definition.get('level')}",
+            "title": generated.get("quizTitle") or "Quiz technique",
             "questions": questions,
             "expectedAnswers": expected_answers,
             "difficulty": {
-                "level": level_definition.get("level"),
-                "label": level_definition.get("label"),
-                "description": level_definition.get("description"),
+                "level": level,
+                "label": f"Niveau {level}",
+                "description": f"Quiz généré dynamiquement niveau {level}",
             },
             "durationMinutes": max(10, len(questions) * 3),
             "evaluationCriteria": [
-                "Verify the expected outcomes of the target level",
-                "Reward technical accuracy rather than guesswork",
-                "Keep the difficulty aligned with the requested level",
+                "Exactly one correct answer per question",
+                "Difficulty aligned with requested level",
+                "Freshly generated questions at each call",
             ],
-            "generationSource": generation_source,
+            "generationSource": "llm" if fallback_reason is None else "fallback",
             "fallbackReason": fallback_reason,
         }
     )
+
+
+def generate_fallback_payload(request: QuizGenerationRequest) -> dict[str, Any]:
+    rng = random.Random(f"{request.skill}:{request.level}:{uuid.uuid4().hex}")
+    title = f"{humanize_skill_name(request.skill)} - Niveau {request.level}"
+    templates = build_templates(request.skill, request.level)
+    questions: list[dict[str, Any]] = []
+
+    for index in range(request.questionCount):
+        template = rng.choice(templates)
+        question_text, correct_text, wrong_texts = template(rng, index + 1)
+        options = [
+            {"code": "A", "text": correct_text, "correct": True},
+            {"code": "B", "text": wrong_texts[0], "correct": False},
+            {"code": "C", "text": wrong_texts[1], "correct": False},
+            {"code": "D", "text": wrong_texts[2], "correct": False},
+        ]
+        rng.shuffle(options)
+        questions.append({"question": question_text, "options": options})
+
+    return {"quizTitle": title, "questions": questions}
+
+
+def humanize_skill_name(skill: str) -> str:
+    cleaned = skill.replace("_", " ").strip()
+    return cleaned[:1].upper() + cleaned[1:] if cleaned else "Quiz"
+
+
+def build_templates(skill: str, level: int):
+    skill_label = humanize_skill_name(skill)
+    level_label = f"Niveau {level}"
+
+    def template_concept(rng: random.Random, number: int):
+        concepts = [
+            "architecture", "bonne pratique", "sécurité", "performance",
+            "maintenance", "tests", "déploiement", "diagnostic"
+        ]
+        concept = rng.choice(concepts)
+        question = f"Question {number} : quelle approche est la plus adaptée pour {concept} en {skill_label} ?"
+        correct = f"Adopter une solution {concept} cohérente avec le contexte {level_label}"
+        wrong = [
+            f"Ignorer totalement les contraintes de {concept}",
+            f"Appliquer une réponse générique sans analyse",
+            f"Choisir une option contraire aux besoins métier",
+        ]
+        return question, correct, wrong
+
+    def template_scenario(rng: random.Random, number: int):
+        scenario = rng.choice([
+            "une application critique",
+            "un service exposé sur Internet",
+            "une mise en production",
+            "un problème de qualité",
+        ])
+        question = f"Question {number} : dans {scenario}, quel réflexe est le plus pertinent en {skill_label} ?"
+        correct = f"Vérifier les prérequis et valider la solution au {level_label}"
+        wrong = [
+            "Déployer sans contrôle",
+            "Contourner les validations",
+            "Choisir la première option venue",
+        ]
+        return question, correct, wrong
+
+    def template_definition(rng: random.Random, number: int):
+        topic = rng.choice([
+            "un concept clé", "une règle métier", "un point d'architecture", "un mécanisme de sécurité"
+        ])
+        question = f"Question {number} : comment expliquer {topic} en {skill_label} ?"
+        correct = f"En donnant une explication précise et adaptée au {level_label}"
+        wrong = [
+            "En restant volontairement vague",
+            "En mélangeant plusieurs notions incompatibles",
+            "En évitant tout exemple concret",
+        ]
+        return question, correct, wrong
+
+    return [template_concept, template_scenario, template_definition]

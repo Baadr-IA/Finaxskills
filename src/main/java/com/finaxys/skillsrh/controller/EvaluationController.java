@@ -12,6 +12,7 @@ import com.finaxys.skillsrh.repository.CollaboratorSkillRepository;
 import com.finaxys.skillsrh.repository.EvaluationRepository;
 import com.finaxys.skillsrh.repository.SkillRepository;
 import com.finaxys.skillsrh.repository.TestCollabRepository;
+import com.finaxys.skillsrh.service.EvaluationQuizService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -51,6 +53,7 @@ public class EvaluationController {
     private final CollaboratorSkillRepository collaboratorSkillRepository;
     private final SkillRepository skillRepository;
     private final TestCollabRepository testCollabRepository;
+    private final EvaluationQuizService evaluationQuizService;
 
     private static final DateTimeFormatter UI_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -59,13 +62,15 @@ public class EvaluationController {
         CollaboratorRepository collaboratorRepository,
         CollaboratorSkillRepository collaboratorSkillRepository,
         SkillRepository skillRepository,
-        TestCollabRepository testCollabRepository
+        TestCollabRepository testCollabRepository,
+        EvaluationQuizService evaluationQuizService
     ) {
         this.evaluationRepository = evaluationRepository;
         this.collaboratorRepository = collaboratorRepository;
         this.collaboratorSkillRepository = collaboratorSkillRepository;
         this.skillRepository = skillRepository;
         this.testCollabRepository = testCollabRepository;
+        this.evaluationQuizService = evaluationQuizService;
     }
 
     @PostMapping("/evaluations")
@@ -183,6 +188,39 @@ public class EvaluationController {
                 .collect(Collectors.toList());
     }
 
+    @PostMapping("/me/evaluations/{assignmentId}/start")
+    public EvaluationQuizService.StartEvaluationResponse startMyEvaluation(
+        Authentication authentication,
+        @PathVariable Long assignmentId
+    ) {
+        Collaborator me = requireByKeycloakSubject(authentication);
+        TestCollab assignment = testCollabRepository.findByIdAndCollaborator_Id(assignmentId, me.getId())
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "evaluation-assignment-not-found",
+                "Evaluation assignment not found for current collaborator"));
+
+        Skill skill = resolveSkillForEvaluation(assignment.getEvaluation().getEvaluationName());
+        if (skill == null) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "evaluation-skill-not-resolved",
+                "Cannot resolve evaluated skill from evaluation label");
+        }
+
+        int declaredLevel = parseDeclaredLevel(assignment.getEvaluation().getLevelDeclared());
+        return evaluationQuizService.start(assignmentId, me.getId(), skill, declaredLevel);
+    }
+
+    @PostMapping("/me/evaluations/{assignmentId}/answers")
+    public EvaluationQuizService.SubmitEvaluationResponse submitMyEvaluationAnswers(
+        Authentication authentication,
+        @PathVariable Long assignmentId,
+        @Valid @RequestBody SubmitEvaluationAnswersRequest request
+    ) {
+        Collaborator me = requireByKeycloakSubject(authentication);
+        List<EvaluationQuizService.SubmitAnswerRequest> answers = request.answers().stream()
+            .map(item -> new EvaluationQuizService.SubmitAnswerRequest(item.questionIndex(), item.optionCode()))
+            .toList();
+        return evaluationQuizService.submitAnswers(assignmentId, me.getId(), answers);
+    }
+
     private EvaluationResponse toResponse(Evaluation e) {
         String collaborator = e.getCollaborator().getFirstName() + " " + e.getCollaborator().getLastName();
         String jobTitle = e.getCollaborator().getJobTitle();
@@ -225,10 +263,17 @@ public class EvaluationController {
         return status != null ? status : Status.EN_ATTENTE;
     }
 
+    private Status normalizeCollaboratorStatus(Status status) {
+        if (status == null || status == Status.EN_COURS) {
+            return Status.EN_ATTENTE;
+        }
+        return status;
+    }
+
     private AssignedEvaluationResponse toAssignedResponse(TestCollab tc) {
         String dateAssigned = tc.getAssignedAt() != null ? tc.getAssignedAt().atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(UI_DATE) : "N/A";
         String dueDate = tc.getDueDate() != null ? tc.getDueDate().format(UI_DATE) : null;
-        Status status = normalizeStatus(tc.getStatus());
+        Status status = normalizeCollaboratorStatus(tc.getStatus());
         Skill evaluatedSkill = resolveSkillForEvaluation(tc.getEvaluation().getEvaluationName());
         String competenceEvaluated = evaluatedSkill != null ? evaluatedSkill.getName() : "N/A";
         List<String> actions = new ArrayList<>();
@@ -290,6 +335,17 @@ public class EvaluationController {
         return null;
     }
 
+    private int parseDeclaredLevel(String levelDeclared) {
+        if (levelDeclared == null || levelDeclared.isBlank()) {
+            return 1;
+        }
+        String normalized = levelDeclared.trim().toLowerCase(Locale.ROOT);
+        if (normalized.contains("4")) return 4;
+        if (normalized.contains("3")) return 3;
+        if (normalized.contains("2")) return 2;
+        return 1;
+    }
+
     public record EvaluationResponse(
         Long id,
         String collaborator,
@@ -321,5 +377,14 @@ public class EvaluationController {
     public record CreateEvaluationRequest(
         @NotNull Long collaboratorId,
         @NotBlank @Size(max = 255) String evaluationName
+    ) {}
+
+    public record SubmitEvaluationAnswersRequest(
+        @NotNull List<@Valid SubmitAnswerItemRequest> answers
+    ) {}
+
+    public record SubmitAnswerItemRequest(
+        @NotNull Integer questionIndex,
+        @NotBlank String optionCode
     ) {}
 }
