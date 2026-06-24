@@ -41,8 +41,8 @@ public class SkillController {
     @PreAuthorize("@permissions.has(authentication, 'SKILLS', 'READ', 'ALL')")
     public List<SkillResponse> list(@RequestParam(required = false) Long categoryId) {
         List<Skill> skills = categoryId != null
-            ? skillRepository.findByCategoryId(categoryId)
-            : skillRepository.findAll();
+            ? skillRepository.findByCategoryIdWithCategory(categoryId)
+            : skillRepository.findAllWithCategory();
         return skills.stream()
             .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
             .map(this::toResponse)
@@ -86,7 +86,7 @@ public class SkillController {
     }
 
     private Skill require(Long id) {
-        return skillRepository.findById(id)
+        return skillRepository.findByIdWithCategory(id)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "skill-not-found", "Skill not found"));
     }
 

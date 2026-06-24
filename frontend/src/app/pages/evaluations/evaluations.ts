@@ -151,7 +151,7 @@ export class Evaluations {
 
   async load(q?: string, status?: 'pending' | 'in_progress' | 'completed' | undefined) {
     try {
-      const data = await this.evaluationService.list(q, status as string | undefined);
+      const data = await this.evaluationService.listAll(q, status as string | undefined);
       const mapped: Evaluation[] = (data || []).map((d: EvaluationDto) => this.mapDto(d));
       this.all.set(mapped);
     } catch (err) {
@@ -208,6 +208,5 @@ function normalizeStatus(status: string | null | undefined): EvalStatus {
   if (s.includes('compl') || s.includes('complete') || s.includes('completed')) return 'completed';
   return 'pending';
 }
-
 
 

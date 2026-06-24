@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -81,22 +82,20 @@ public class CollaboratorSkillController {
     // ── Collaborator self-evaluation: /me/skills ─────────────────────────────
 
     @GetMapping("/me/skills")
-    @PreAuthorize("@permissions.has(authentication, 'SKILL_ASSESSMENTS', 'READ', 'SELF')")
     public List<AssessmentResponse> mySkills(Authentication authentication) {
-        Collaborator me = requireByKeycloakId(authentication.getName());
+        Collaborator me = requireByKeycloakSubject(authentication);
         return assessmentRepository.findByCollaboratorId(me.getId()).stream()
             .map(this::toResponse)
             .toList();
     }
 
     @PutMapping("/me/skills/{skillId}")
-    @PreAuthorize("@permissions.has(authentication, 'SKILL_ASSESSMENTS', 'UPDATE', 'SELF')")
     public AssessmentResponse selfEvaluate(
         Authentication authentication,
         @PathVariable Long skillId,
         @Valid @RequestBody SelfAssessmentRequest req
     ) {
-        Collaborator me = requireByKeycloakId(authentication.getName());
+        Collaborator me = requireByKeycloakSubject(authentication);
         CollaboratorSkill assessment = getOrCreate(me.getId(), skillId);
         assessment.setSelfLevel(req.selfLevel());
         assessment.setSelfNote(req.selfNote());
@@ -115,6 +114,16 @@ public class CollaboratorSkillController {
         return collaboratorRepository.findByKeycloakId(keycloakId)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "collaborator-not-found",
                 "No collaborator profile linked to your account — contact your HR administrator"));
+    }
+
+    private Collaborator requireByKeycloakSubject(Authentication authentication) {
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+            String subject = jwtAuthenticationToken.getToken().getSubject();
+            if (subject != null && !subject.isBlank()) {
+                return requireByKeycloakId(subject);
+            }
+        }
+        return requireByKeycloakId(authentication.getName());
     }
 
     private Skill requireSkill(Long id) {

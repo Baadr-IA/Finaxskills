@@ -2,10 +2,16 @@ package com.finaxys.skillsrh.controller;
 
 import com.finaxys.skillsrh.api.ApiException;
 import com.finaxys.skillsrh.domain.Collaborator;
+import com.finaxys.skillsrh.domain.CollaboratorSkill;
 import com.finaxys.skillsrh.domain.Evaluation;
+import com.finaxys.skillsrh.domain.Skill;
+import com.finaxys.skillsrh.domain.TestCollab;
 import com.finaxys.skillsrh.domain.Status;
 import com.finaxys.skillsrh.repository.CollaboratorRepository;
+import com.finaxys.skillsrh.repository.CollaboratorSkillRepository;
 import com.finaxys.skillsrh.repository.EvaluationRepository;
+import com.finaxys.skillsrh.repository.SkillRepository;
+import com.finaxys.skillsrh.repository.TestCollabRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +19,8 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +28,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,12 +48,24 @@ public class EvaluationController {
 
     private final EvaluationRepository evaluationRepository;
     private final CollaboratorRepository collaboratorRepository;
+    private final CollaboratorSkillRepository collaboratorSkillRepository;
+    private final SkillRepository skillRepository;
+    private final TestCollabRepository testCollabRepository;
 
     private static final DateTimeFormatter UI_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public EvaluationController(EvaluationRepository evaluationRepository, CollaboratorRepository collaboratorRepository) {
+    public EvaluationController(
+        EvaluationRepository evaluationRepository,
+        CollaboratorRepository collaboratorRepository,
+        CollaboratorSkillRepository collaboratorSkillRepository,
+        SkillRepository skillRepository,
+        TestCollabRepository testCollabRepository
+    ) {
         this.evaluationRepository = evaluationRepository;
         this.collaboratorRepository = collaboratorRepository;
+        this.collaboratorSkillRepository = collaboratorSkillRepository;
+        this.skillRepository = skillRepository;
+        this.testCollabRepository = testCollabRepository;
     }
 
     @PostMapping("/evaluations")
@@ -58,7 +80,13 @@ public class EvaluationController {
         }
 
         Evaluation evaluation = new Evaluation(collaborator, req.evaluationName().trim(), Status.EN_ATTENTE, LocalDate.now());
+        evaluation.setLevelDeclared(resolveDeclaredLevel(collaborator, req.evaluationName().trim()));
         Evaluation saved = evaluationRepository.save(evaluation);
+
+        // create a corresponding test_collab record to track assignment for the collaborator
+        TestCollab tc = new TestCollab(saved, collaborator, Instant.now(), saved.getStatus(), 0, LocalDate.now().plusDays(7));
+        testCollabRepository.save(tc);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
     }
 
@@ -111,6 +139,50 @@ public class EvaluationController {
                 .collect(Collectors.toList());
     }
 
+    // collaborator-specific list: evaluations assigned to the authenticated user
+    @GetMapping("/me/evaluations")
+    public List<AssignedEvaluationResponse> myList(Authentication authentication,
+                                                   @RequestParam(required = false) String q,
+                                                   @RequestParam(required = false) String status) {
+        Collaborator me = requireByKeycloakSubject(authentication);
+        List<TestCollab> assignments = testCollabRepository.findByCollaborator_IdOrderByAssignedAtDesc(me.getId());
+
+        return assignments.stream()
+                .filter(e -> {
+                    if (q != null && !q.trim().isEmpty()) {
+                        String nq = q.toLowerCase();
+                        String evalName = e.getEvaluation().getEvaluationName() != null ? e.getEvaluation().getEvaluationName().toLowerCase() : "";
+                        if (!evalName.contains(nq)) {
+                            return false;
+                        }
+                    }
+                    if (status != null && !status.trim().isEmpty()) {
+                        try {
+                            switch (status.trim().toLowerCase()) {
+                                case "pending":
+                                    return normalizeStatus(e.getStatus()) == Status.EN_ATTENTE;
+                                case "in_progress":
+                                    return normalizeStatus(e.getStatus()) == Status.EN_COURS;
+                                case "completed":
+                                    return normalizeStatus(e.getStatus()) == Status.COMPLETE;
+                                default:
+                                    try {
+                                        Status s = Status.fromLabel(status);
+                                        return normalizeStatus(e.getStatus()) == s;
+                                    } catch (Exception ex) {
+                                        return true;
+                                    }
+                            }
+                        } catch (Exception ex) {
+                            return true;
+                        }
+                    }
+                    return true;
+                })
+                .map(this::toAssignedResponse)
+                .collect(Collectors.toList());
+    }
+
     private EvaluationResponse toResponse(Evaluation e) {
         String collaborator = e.getCollaborator().getFirstName() + " " + e.getCollaborator().getLastName();
         String jobTitle = e.getCollaborator().getJobTitle();
@@ -133,6 +205,91 @@ public class EvaluationController {
         );
     }
 
+    private Collaborator requireByKeycloakId(String keycloakId) {
+        return collaboratorRepository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "collaborator-not-found",
+                "No collaborator profile linked to your account — contact your HR administrator"));
+    }
+
+    private Collaborator requireByKeycloakSubject(Authentication authentication) {
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+            String subject = jwtAuthenticationToken.getToken().getSubject();
+            if (subject != null && !subject.isBlank()) {
+                return requireByKeycloakId(subject);
+            }
+        }
+        return requireByKeycloakId(authentication.getName());
+    }
+
+    private Status normalizeStatus(Status status) {
+        return status != null ? status : Status.EN_ATTENTE;
+    }
+
+    private AssignedEvaluationResponse toAssignedResponse(TestCollab tc) {
+        String dateAssigned = tc.getAssignedAt() != null ? tc.getAssignedAt().atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(UI_DATE) : "N/A";
+        String dueDate = tc.getDueDate() != null ? tc.getDueDate().format(UI_DATE) : null;
+        Status status = normalizeStatus(tc.getStatus());
+        Skill evaluatedSkill = resolveSkillForEvaluation(tc.getEvaluation().getEvaluationName());
+        String competenceEvaluated = evaluatedSkill != null ? evaluatedSkill.getName() : "N/A";
+        List<String> actions = new ArrayList<>();
+        switch (status) {
+            case EN_ATTENTE -> actions.add("start");
+            case EN_COURS -> actions.add("resume");
+            case COMPLETE -> actions.add("view");
+        }
+        return new AssignedEvaluationResponse(
+            tc.getId(),
+            tc.getEvaluation().getId(),
+            tc.getEvaluation().getEvaluationName(),
+            dateAssigned,
+            status.getLabel(),
+            competenceEvaluated,
+            tc.getEvaluation().getLevelDeclared(),
+            tc.getEvaluation().getLevelValidated(),
+            tc.getProgress() != null ? tc.getProgress() : 0,
+            dueDate,
+            actions
+        );
+    }
+
+    private String resolveDeclaredLevel(Collaborator collaborator, String evaluationName) {
+        Skill skill = resolveSkillForEvaluation(evaluationName);
+        if (skill == null) {
+            return null;
+        }
+
+        return collaboratorSkillRepository.findByCollaboratorId(collaborator.getId()).stream()
+            .filter(cs -> cs.getSkill().getId().equals(skill.getId()))
+            .map(CollaboratorSkill::getSelfLevel)
+            .filter(level -> level != null && level >= 1 && level <= 4)
+            .findFirst()
+            .map(level -> "NIVEAU " + level)
+            .orElse(null);
+    }
+
+    private Skill resolveSkillForEvaluation(String evaluationName) {
+        String normalized = evaluationName == null ? "" : evaluationName.trim().toLowerCase(Locale.ROOT);
+        for (Skill skill : skillRepository.findAll()) {
+            String skillName = skill.getName() == null ? "" : skill.getName().trim().toLowerCase(Locale.ROOT);
+            if (!skillName.isEmpty() && normalized.contains(skillName)) {
+                return skill;
+            }
+        }
+        if (normalized.contains("java")) {
+            return skillRepository.findAll().stream()
+                .filter(skill -> "java".equalsIgnoreCase(skill.getName()))
+                .findFirst()
+                .orElse(null);
+        }
+        if (normalized.contains("python")) {
+            return skillRepository.findAll().stream()
+                .filter(skill -> "python".equalsIgnoreCase(skill.getName()))
+                .findFirst()
+                .orElse(null);
+        }
+        return null;
+    }
+
     public record EvaluationResponse(
         Long id,
         String collaborator,
@@ -147,10 +304,22 @@ public class EvaluationController {
         String score
     ) {}
 
+    public record AssignedEvaluationResponse(
+        Long id,
+        Long evaluationId,
+        String evaluation,
+        String dateAssigned,
+        String status,
+        String competenceEvaluated,
+        String levelDeclared,
+        String levelValidated,
+        Integer progress,
+        String dueDate,
+        List<String> availableActions
+    ) {}
+
     public record CreateEvaluationRequest(
         @NotNull Long collaboratorId,
         @NotBlank @Size(max = 255) String evaluationName
     ) {}
 }
-
-

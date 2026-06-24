@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CollaboratorService } from '../../core/services/collaborator.service';
@@ -8,6 +8,7 @@ import { AssessmentService } from '../../core/services/assessment.service';
 import type { CollaboratorDto } from '../../api/collaborator.dto';
 import type { SkillDto } from '../../api/skill.dto';
 import type { AssessmentDto } from '../../api/assessment.dto';
+import Keycloak from 'keycloak-js';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,7 +17,8 @@ import type { AssessmentDto } from '../../api/assessment.dto';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard {
+export class Dashboard implements OnInit {
+  private readonly keycloak = inject(Keycloak);
   private readonly collaboratorService = inject(CollaboratorService);
   private readonly skillService = inject(SkillService);
   private readonly skillCategoryService = inject(SkillCategoryService);
@@ -63,6 +65,40 @@ export class Dashboard {
 
   constructor() {
     void this.loadAll();
+  }
+
+  async ngOnInit(): Promise<void> {
+    // Log all Keycloak-related info for the connected user (token, parsed payloads, profile, roles)
+    try {
+      console.group('Keycloak - connected user');
+      console.log('authenticated:', this.keycloak.authenticated);
+      console.log('token:', this.keycloak.token);
+      console.log('tokenParsed:', this.keycloak.tokenParsed);
+      console.log('idToken:', this.keycloak.idToken);
+      console.log('idTokenParsed:', this.keycloak.idTokenParsed);
+      // subject / sub
+      console.log('subject:', (this.keycloak as any).subject || (this.keycloak.tokenParsed && (this.keycloak.tokenParsed as any).sub));
+      console.log('clientId:', (this.keycloak as any).clientId || (this.keycloak as any).clientId);
+      console.log('realmAccess:', (this.keycloak as any).realmAccess);
+      console.log('resourceAccess:', (this.keycloak as any).resourceAccess);
+
+      // Try to load the full user profile (may perform a request)
+      try {
+        const profile = await this.keycloak.loadUserProfile();
+        console.log('profile:', profile);
+      } catch (pErr) {
+        console.warn('Could not load user profile:', pErr);
+      }
+
+      // If tokenParsed contains custom claims, log them too
+      if (this.keycloak.tokenParsed) {
+        console.log('tokenParsed (full):', this.keycloak.tokenParsed);
+      }
+
+      console.groupEnd();
+    } catch (err) {
+      console.error('Error while logging Keycloak user info:', err);
+    }
   }
 
   private async loadAll(): Promise<void> {

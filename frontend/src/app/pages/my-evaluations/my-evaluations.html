@@ -1,0 +1,134 @@
+<div class="my-evaluations-container">
+  <div class="header">
+    <div>
+      <h1>Mes évaluations</h1>
+      <p class="subtitle">Les évaluations qui vous ont été assignées</p>
+    </div>
+    <div class="filter-wrapper">
+      <select class="status-filter" [value]="filter()" (change)="onFilterChange($event)">
+        <option value="all">Filtrer par statut</option>
+        <option value="pending">ASSIGNÉ</option>
+        <option value="in_progress">EN COURS</option>
+        <option value="completed">COMPLÉTÉ</option>
+      </select>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">Chargement...</div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      @if (filter() !== 'all') {
+        <p>Aucune évaluation trouvée avec le filtre sélectionné.</p>
+      } @else {
+        <p>Aucune évaluation assignée.</p>
+      }
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="evaluations-table">
+        <thead>
+          <tr>
+            <th>Évaluation</th>
+            <th>Statut</th>
+            <th>Niveau validé</th>
+            <th>Progression</th>
+            <th>Date assignée</th>
+            <th>Date limite</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (eval of filtered(); track eval.id) {
+            <tr>
+              <td class="evaluation-name">{{ eval.evaluation }}</td>
+              <td>
+                <span [ngClass]="statusClass(eval.status)">{{ statusLabel(eval.status) }}</span>
+              </td>
+              <td>
+                @if (eval.levelValidated) {
+                  <span class="level-badge">{{ eval.levelValidated }}</span>
+                } @else {
+                  <span class="level-badge level-badge-empty">—</span>
+                }
+              </td>
+              <td>
+                <div class="progress-wrap">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="eval.progress"></div>
+                  </div>
+                  <span class="progress-label">{{ eval.progress }}%</span>
+                </div>
+              </td>
+              <td>
+                @if (eval.dateAssigned) {
+                  <span class="date">{{ eval.dateAssigned }}</span>
+                } @else {
+                  <span class="dash">—</span>
+                }
+              </td>
+              <td>
+                @if (eval.dueDate) {
+                  <span class="date">{{ eval.dueDate }}</span>
+                } @else {
+                  <span class="dash">—</span>
+                }
+              </td>
+              <td class="actions">
+                <div class="action-group">
+                  @for (action of eval.availableActions; track action) {
+                    @if (action === 'start' || action === 'resume') {
+                      <button class="action-btn action-play" (click)="onStartTest(eval)" title="Démarrer / reprendre">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                      </button>
+                    } @else if (action === 'view') {
+                      <button class="action-btn action-view" (click)="onViewTest(eval)" title="Voir le test">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    }
+                  }
+                  @if (eval.availableActions.length === 0) {
+                    <span class="dash">—</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (selectedForStart(); as selected) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeStartModal()">
+    <div class="start-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" (click)="closeStartModal()" aria-label="Fermer">×</button>
+      <h2 class="start-title">{{ selected.evaluation }}</h2>
+      <p class="start-subtitle">{{ selected.competenceEvaluated }}</p>
+
+      <div class="start-details">
+        <div class="detail-row">
+          <span>Compétence évaluée</span>
+          <strong>{{ selected.competenceEvaluated }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Niveau déclaré</span>
+          <span class="declared-badge">{{ declaredLevelDisplay(selected.levelDeclared) }}</span>
+        </div>
+        <div class="detail-row">
+          <span>Nombre de questions</span>
+          <strong>5 questions</strong>
+        </div>
+      </div>
+
+      <p class="start-note">Une fois lancée, l’évaluation doit être complétée.</p>
+      <button type="button" class="start-btn" (click)="startEvaluation()">▶ Commencer l’évaluation</button>
+    </div>
+  </div>
+}

@@ -8,5 +8,6 @@ import java.util.List;
 public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
 
     List<Evaluation> findAllByOrderByDateAssignedDesc();
-}
 
+    List<Evaluation> findByCollaborator_IdOrderByDateAssignedDesc(Long collaboratorId);
+}

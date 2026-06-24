@@ -31,7 +31,9 @@ public class PermissionAuthorization {
             resourceKey.get(),
             requestedAction.get(),
             requestedScope.get(),
-            PermissionContext.all()
+            requestedScope.get() == Scope.SELF
+                ? PermissionContext.self(extractCurrentUserId(authentication), extractCurrentUserId(authentication))
+                : PermissionContext.all()
         );
     }
 
@@ -87,4 +89,3 @@ public class PermissionAuthorization {
         return authentication != null ? authentication.getName() : null;
     }
 }
-
