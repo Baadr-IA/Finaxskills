@@ -59,7 +59,12 @@ public class EvaluationQuizService {
                 "Evaluation assignment not found for current collaborator"));
 
         QuizModels.GeneratedQuizBlock generated = quizGenerationClient.generateBlock(
-            new QuizModels.QuizGenerationRequest(normalizeSkillKey(skill.getName()), level, 5, null)
+            new QuizModels.QuizGenerationRequest(
+                normalizeSkillKey(skill.getName()),
+                level,
+                5,
+                buildGenerationInstructions(level)
+            )
         );
 
         List<Long> existingQuestionIds = questionRepository.findByTestCollab_IdOrderByPositionOrderAsc(assignment.getId()).stream()
@@ -208,6 +213,15 @@ public class EvaluationQuizService {
     private String normalizeSkillKey(String skillName) {
         String lowerCase = skillName.toLowerCase(Locale.ROOT);
         return NON_ALPHANUMERIC.matcher(lowerCase).replaceAll("_").replaceAll("^_+|_+$", "");
+    }
+
+    private String buildGenerationInstructions(int level) {
+        return switch (level) {
+            case 1 -> "Declared level: debutant. Questions must assess fundamentals, syntax basics, and simple practical cases.";
+            case 2 -> "Declared level: intermediaire. Questions must assess autonomous usage and common real-world implementation choices.";
+            case 3 -> "Declared level: confirme. Questions must include design trade-offs, debugging, and optimization reasoning.";
+            default -> "Declared level: expert. Questions must assess architecture, advanced optimization, reliability, and complex edge cases.";
+        };
     }
 
     public record StartEvaluationResponse(

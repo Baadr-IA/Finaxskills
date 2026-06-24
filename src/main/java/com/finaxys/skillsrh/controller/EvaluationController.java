@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Set;
+import java.text.Normalizer;
 import java.util.stream.Collectors;
 
 @RestController
@@ -340,7 +341,12 @@ public class EvaluationController {
         if (levelDeclared == null || levelDeclared.isBlank()) {
             return 1;
         }
-        String normalized = levelDeclared.trim().toLowerCase(Locale.ROOT);
+        String normalized = Normalizer.normalize(levelDeclared.trim().toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
+            .replaceAll("\\p{M}+", "");
+        if (normalized.contains("expert")) return 4;
+        if (normalized.contains("confirme")) return 3;
+        if (normalized.contains("intermediaire") || normalized.contains("intermidiaire")) return 2;
+        if (normalized.contains("debutant")) return 1;
         if (normalized.contains("4")) return 4;
         if (normalized.contains("3")) return 3;
         if (normalized.contains("2")) return 2;
