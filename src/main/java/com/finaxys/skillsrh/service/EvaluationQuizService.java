@@ -3,6 +3,7 @@ package com.finaxys.skillsrh.service;
 import com.finaxys.skillsrh.api.ApiException;
 import com.finaxys.skillsrh.domain.AnswerOption;
 import com.finaxys.skillsrh.domain.CollaboratorAnswer;
+import com.finaxys.skillsrh.domain.Evaluation;
 import com.finaxys.skillsrh.domain.Skill;
 import com.finaxys.skillsrh.domain.Status;
 import com.finaxys.skillsrh.domain.TestCollab;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -96,6 +98,14 @@ public class EvaluationQuizService {
         assignment.setProgress(0);
         assignment.setScore(null);
         assignment.touch();
+
+        Evaluation evaluation = assignment.getEvaluation();
+        evaluation.setStatus(Status.EN_COURS);
+        evaluation.setDateValidated(null);
+        evaluation.setLevelValidated(null);
+        evaluation.setScore(null);
+        evaluation.touch();
+
         testCollabRepository.save(assignment);
 
         return new StartEvaluationResponse(assignment.getEvaluation().getEvaluationName(), questions);
@@ -155,11 +165,38 @@ public class EvaluationQuizService {
 
         assignment.setProgress(progress);
         assignment.setScore(score);
-        assignment.setStatus(answeredQuestions >= totalQuestions ? Status.COMPLETE : Status.EN_COURS);
+        boolean completed = answeredQuestions >= totalQuestions;
+        assignment.setStatus(completed ? Status.COMPLETE : Status.EN_COURS);
         assignment.touch();
+
+        Evaluation evaluation = assignment.getEvaluation();
+        evaluation.setStatus(completed ? Status.COMPLETE : Status.EN_COURS);
+        if (completed) {
+            evaluation.setDateValidated(LocalDate.now());
+            evaluation.setLevelValidated(computeValidatedLevel(score));
+        } else {
+            evaluation.setDateValidated(null);
+            evaluation.setLevelValidated(null);
+        }
+        evaluation.setScore(score + "%");
+        evaluation.touch();
+
         testCollabRepository.save(assignment);
 
         return new SubmitEvaluationResponse(score, answeredQuestions, correctAnswers, totalQuestions, assignment.getStatus().getLabel());
+    }
+
+    private String computeValidatedLevel(int scorePercentage) {
+        if (scorePercentage >= 85) {
+            return "NIVEAU 4";
+        }
+        if (scorePercentage >= 70) {
+            return "NIVEAU 3";
+        }
+        if (scorePercentage >= 50) {
+            return "NIVEAU 2";
+        }
+        return "NIVEAU 1";
     }
 
     private StartOptionResponse saveOption(Question question, String code, String text, String expectedCode) {

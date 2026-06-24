@@ -292,6 +292,7 @@ public class EvaluationController {
             tc.getEvaluation().getLevelDeclared(),
             tc.getEvaluation().getLevelValidated(),
             tc.getProgress() != null ? tc.getProgress() : 0,
+            tc.getEvaluation().getScore(),
             dueDate,
             actions
         );
@@ -370,6 +371,7 @@ public class EvaluationController {
         String levelDeclared,
         String levelValidated,
         Integer progress,
+        String score,
         String dueDate,
         List<String> availableActions
     ) {}

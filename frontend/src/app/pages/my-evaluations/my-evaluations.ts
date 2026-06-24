@@ -12,7 +12,7 @@ type Evaluation = {
   competenceEvaluated: string;
   levelDeclared: string | null;
   levelValidated: string | null;
-  progress: number;
+  score: string | null;
   dueDate?: string | null;
   availableActions: string[];
 };
@@ -108,7 +108,7 @@ export class MyEvaluations {
       competenceEvaluated: d.competenceEvaluated?.trim() || 'N/A',
       levelDeclared: d.levelDeclared ?? null,
       levelValidated: d.levelValidated ?? null,
-      progress: d.progress ?? 0,
+      score: d.score ?? null,
       dueDate: d.dueDate ?? null,
       availableActions: d.availableActions ?? [],
     };
@@ -170,6 +170,22 @@ export class MyEvaluations {
     if (normalized === 'NIVEAU 3') return '3 · Avancé';
     if (normalized === 'NIVEAU 4') return '4 · Expert';
     return levelDeclared;
+  }
+
+  validatedLevelDisplay(levelValidated: string | null): string {
+    if (!levelValidated || !levelValidated.trim()) return '—';
+    const match = levelValidated.toUpperCase().match(/(\d+)/);
+    return match ? match[1] : levelValidated;
+  }
+
+  scoreDisplay(score: string | null): string {
+    if (!score || !score.trim()) return '—';
+    const trimmed = score.trim();
+    return trimmed.includes('%') ? trimmed : `${trimmed}%`;
+  }
+
+  hasScore(score: string | null): boolean {
+    return !!score && !!score.trim();
   }
 
   closeQuiz(): void {

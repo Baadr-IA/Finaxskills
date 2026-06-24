@@ -36,7 +36,6 @@
           <th>Évaluation</th>
           <th>Statut</th>
           <th>Date assignée</th>
-          <th>Date planifiée</th>
           <th>Date validée</th>
           <th>Niveau déclaré</th>
           <th>Niveau validé</th>
@@ -51,9 +50,8 @@
             <span [attr.title]="e.jobTitle" [class]="jobClass(e.jobTitle)">{{ e.jobTitle ?? 'N/A' }}</span>
           </td>
           <td>{{ e.evaluation }}</td>
-          <td>{{ e.status }}</td>
+          <td>{{ e.statusLabel }}</td>
           <td>{{ e.dateAssigned }}</td>
-          <td>{{ e.datePlanned ?? 'N/A' }}</td>
           <td>{{ e.dateValidated ?? 'N/A' }}</td>
           <td>
             <span [attr.title]="e.levelDeclared" [class]="levelClass(e.levelDeclared)">{{ e.levelDeclared ?? 'N/A' }}</span>

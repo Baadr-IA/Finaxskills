@@ -31,7 +31,7 @@
             <th>Évaluation</th>
             <th>Statut</th>
             <th>Niveau validé</th>
-            <th>Progression</th>
+            <th>Score</th>
             <th>Date assignée</th>
             <th>Date limite</th>
             <th>Actions</th>
@@ -45,19 +45,14 @@
                 <span [ngClass]="statusClass(eval.status)">{{ statusLabel(eval.status) }}</span>
               </td>
               <td>
-                @if (eval.levelValidated) {
-                  <span class="level-badge">{{ eval.levelValidated }}</span>
-                } @else {
-                  <span class="level-badge level-badge-empty">—</span>
-                }
+                <span class="level-validated-badge" [class.level-validated-empty]="!eval.levelValidated">
+                  {{ validatedLevelDisplay(eval.levelValidated) }}
+                </span>
               </td>
               <td>
-                <div class="progress-wrap">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="eval.progress"></div>
-                  </div>
-                  <span class="progress-label">{{ eval.progress }}%</span>
-                </div>
+                <span class="score-badge" [class.score-badge-empty]="!hasScore(eval.score)">
+                  {{ scoreDisplay(eval.score) }}
+                </span>
               </td>
               <td>
                 @if (eval.dateAssigned) {

@@ -26,6 +26,7 @@ export type MyEvaluationDto = {
   levelDeclared?: string | null;
   levelValidated?: string | null;
   progress: number;
+  score?: string | null;
   dueDate?: string | null;
   availableActions: string[];
 };
