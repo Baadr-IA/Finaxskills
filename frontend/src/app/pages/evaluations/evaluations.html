@@ -12,12 +12,11 @@
 @if (assignMessage()) {
   <div class="alert-success">{{ assignMessage() }}</div>
 }
-
 <div class="card">
   <div class="card-header">
     <div class="tabs">
       <button (click)="setFilter('all')" [class.active]="filter() === 'all'">Tous ({{ counts().all }})</button>
-      <button (click)="setFilter('pending')" [class.active]="filter() === 'pending'">Attente ({{ counts().pending }})</button>
+      <button (click)="setFilter('pending')" [class.active]="filter() === 'pending'">En attente ({{ counts().pending }})</button>
       <button (click)="setFilter('in_progress')" [class.active]="filter() === 'in_progress'">En cours ({{ counts().in_progress }})</button>
       <button (click)="setFilter('completed')" [class.active]="filter() === 'completed'">Complété ({{ counts().completed }})</button>
     </div>
@@ -60,7 +59,23 @@
             <span [attr.title]="e.levelValidated" [class]="levelClass(e.levelValidated)">{{ e.levelValidated ?? 'N/A' }}</span>
           </td>
           <td>{{ e.score ?? 'N/A' }}</td>
-          <td class="muted">N/A</td>
+          <td>
+            @if (e.status === 'completed') {
+              <button
+                type="button"
+                class="detail-eye"
+                aria-label="Voir les détails du test"
+                title="Voir les détails du test (bientôt disponible)"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            } @else {
+              <span class="muted">N/A</span>
+            }
+          </td>
         </tr>
       </tbody>
     </table>
