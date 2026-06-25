@@ -9,6 +9,19 @@ import {
 } from 'keycloak-angular';
 
 import { PermissionStoreService } from './auth/permission-store.service';
+import type { PermissionRequirement } from './auth/auth.types';
+
+const readOwnEvaluations: PermissionRequirement = {
+  resource: 'COLLABORATORS',
+  action: 'READ',
+  scope: 'SELF',
+};
+
+const readAllCollaborators: PermissionRequirement = {
+  resource: 'COLLABORATORS',
+  action: 'READ',
+  scope: 'ALL',
+};
 
 @Component({
   selector: 'app-root',
@@ -96,6 +109,14 @@ export class App {
 
     this.username.set(tokenPayload?.preferred_username ?? tokenPayload?.sub ?? null);
     await this.permissionStore.ensureLoaded();
+
+    const isCollaboratorOnly =
+      this.permissionStore.hasPermission(readOwnEvaluations) &&
+      !this.permissionStore.hasPermission(readAllCollaborators);
+    const isDefaultLandingUrl = this.router.url === '/' || this.router.url === '/dashboard';
+    if (isCollaboratorOnly && isDefaultLandingUrl) {
+      await this.router.navigateByUrl('/mes-evaluations');
+    }
   }
 
   private clearAuthState(): void {
