@@ -39,6 +39,7 @@ export class App {
   protected readonly authenticated = signal(false);
   protected readonly username = signal<string | null>(null);
   protected readonly userMenuOpen = signal(false);
+  protected readonly isCollaboratorOnly = signal(false);
 
   protected readonly initials = computed(() => {
     const u = this.username();
@@ -113,6 +114,8 @@ export class App {
     const isCollaboratorOnly =
       this.permissionStore.hasPermission(readOwnEvaluations) &&
       !this.permissionStore.hasPermission(readAllCollaborators);
+    this.isCollaboratorOnly.set(isCollaboratorOnly);
+
     const isDefaultLandingUrl = this.router.url === '/' || this.router.url === '/dashboard';
     if (isCollaboratorOnly && isDefaultLandingUrl) {
       await this.router.navigateByUrl('/mes-evaluations');
@@ -123,6 +126,7 @@ export class App {
     this.authenticated.set(false);
     this.username.set(null);
     this.userMenuOpen.set(false);
+    this.isCollaboratorOnly.set(false);
     this.permissionStore.clear();
   }
 }
