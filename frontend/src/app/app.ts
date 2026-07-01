@@ -119,6 +119,13 @@ export class App {
     const isDefaultLandingUrl = this.router.url === '/' || this.router.url === '/dashboard';
     if (isCollaboratorOnly && isDefaultLandingUrl) {
       await this.router.navigateByUrl('/mes-evaluations');
+      return;
+    }
+
+    const isRhLandingOnCollaboratorHome = !isCollaboratorOnly
+      && (this.router.url === '/' || this.router.url === '/mes-evaluations');
+    if (isRhLandingOnCollaboratorHome) {
+      await this.router.navigateByUrl('/dashboard');
     }
   }
 

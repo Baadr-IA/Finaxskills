@@ -181,6 +181,15 @@
   text-align: center;
 }
 
+.details-col {
+  text-align: center;
+}
+
+.evaluations-table th.details-col,
+.evaluations-table td.details-col {
+  text-align: center;
+}
+
 .action-group {
   display: inline-flex;
   align-items: center;
@@ -490,6 +499,25 @@
   margin: 0 0 1.25rem;
   font-size: 1.8rem;
   font-weight: 700;
+  white-space: pre-line;
+}
+
+.quiz-question-code {
+  margin: -0.25rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 1rem;
+  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.quiz-question-code code {
+  font-family: inherit;
 }
 
 .quiz-options {

@@ -39,7 +39,7 @@
           <th>Niveau déclaré</th>
           <th>Niveau validé</th>
           <th>Score</th>
-          <th>Détails</th>
+          <th class="details-col">Détails</th>
         </tr>
       </thead>
       <tbody>
@@ -59,7 +59,7 @@
             <span [attr.title]="e.levelValidated" [class]="levelClass(e.levelValidated)">{{ e.levelValidated ?? 'N/A' }}</span>
           </td>
           <td>{{ e.score ?? 'N/A' }}</td>
-          <td>
+          <td class="details-col">
             @if (e.status === 'completed') {
               <button
                 type="button"

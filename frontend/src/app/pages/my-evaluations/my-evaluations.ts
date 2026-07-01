@@ -20,7 +20,13 @@ type Evaluation = {
 type QuizQuestion = {
   questionId: number;
   question: string;
+  code?: string | null;
   options: { code: string; text: string; correct: boolean }[];
+};
+
+type QuestionContent = {
+  statement: string;
+  code: string | null;
 };
 
 type CompletionResult = {
@@ -53,6 +59,9 @@ export class MyEvaluations {
   readonly isStartingQuiz = signal(false);
   readonly isSubmittingQuiz = signal(false);
   readonly completionResult = signal<CompletionResult | null>(null);
+  readonly currentQuestionContent = computed<QuestionContent>(() =>
+    this.getCurrentQuestionContent()
+  );
 
   private readonly evaluationService = inject(EvaluationService);
 
@@ -231,6 +240,124 @@ export class MyEvaluations {
     return this.currentQuestionIndex() >= this.quizQuestions().length - 1;
   }
 
+  private getCurrentQuestionContent(): QuestionContent {
+    const current = this.quizQuestions()[this.currentQuestionIndex()];
+    const question = current?.question ?? '';
+    const directCode = (current?.code ?? '').trim();
+    if (directCode) {
+      const statement = this.removeCodeFromStatement(question, directCode);
+      return {
+        statement,
+        code: directCode,
+      };
+    }
+    return this.parseQuestionContent(question);
+  }
+
+  private removeCodeFromStatement(question: string, code: string): string {
+    const normalizedQuestion = question.replace(/\r\n/g, '\n').trim();
+    const normalizedCode = code.replace(/\r\n/g, '\n').trim();
+    if (!normalizedQuestion) return '';
+    if (!normalizedCode) return normalizedQuestion;
+
+    const withoutFenced = normalizedQuestion
+      .replace(/```(?:[\w#+.-]+)?\s*([\s\S]*?)```/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    if (withoutFenced && withoutFenced !== normalizedQuestion) {
+      return withoutFenced;
+    }
+
+    if (normalizedQuestion.includes(normalizedCode)) {
+      return normalizedQuestion
+        .replace(normalizedCode, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    const withoutCodeLines = this.removeCodeLinesFromText(normalizedQuestion, normalizedCode);
+    if (withoutCodeLines !== normalizedQuestion) {
+      return withoutCodeLines;
+    }
+
+    return normalizedQuestion;
+  }
+
+  private removeCodeLinesFromText(text: string, code: string): string {
+    const textLines = text.split('\n');
+    const codeLines = code.split('\n').map((line) => line.trimRight());
+    if (codeLines.length === 0) return text;
+
+    const normalize = (line: string) => line.trim().replace(/\s+/g, ' ');
+    const normalizedCodeLines = codeLines.map(normalize);
+    if (normalizedCodeLines.every((line) => !line)) return text;
+
+    for (let start = 0; start <= textLines.length - normalizedCodeLines.length; start++) {
+      let matches = true;
+      for (let i = 0; i < normalizedCodeLines.length; i++) {
+        if (normalize(textLines[start + i] ?? '') !== normalizedCodeLines[i]) {
+          matches = false;
+          break;
+        }
+      }
+      if (!matches) continue;
+
+      return textLines
+        .slice(0, start)
+        .concat(textLines.slice(start + normalizedCodeLines.length))
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    return text;
+  }
+
+  private parseQuestionContent(rawQuestion: string): QuestionContent {
+    const question = rawQuestion.trim();
+    if (!question) {
+      return { statement: '', code: null };
+    }
+
+    const fencedCodeMatch = question.match(/```(?:[\w#+.-]+)?\s*([\s\S]*?)```/);
+    if (fencedCodeMatch) {
+      const code = (fencedCodeMatch[1] ?? '').trim();
+      const statement = question
+        .replace(fencedCodeMatch[0], '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      return {
+        statement,
+        code: code || null,
+      };
+    }
+
+    const lines = question.split(/\r?\n/);
+    if (lines.length > 1) {
+      const codeStartIndex = lines.findIndex((line, index) => index > 0 && this.looksLikeCodeLine(line));
+      if (codeStartIndex > 0) {
+        const statement = lines.slice(0, codeStartIndex).join('\n').trim();
+        const code = lines.slice(codeStartIndex).join('\n').trim();
+        return {
+          statement,
+          code: code || null,
+        };
+      }
+    }
+
+    return { statement: question, code: null };
+  }
+
+  private looksLikeCodeLine(line: string): boolean {
+    const text = line.trim();
+    if (!text) return false;
+    return (
+      /[{}();=<>]/.test(text) ||
+      /^(public|private|protected|class|interface|enum|if|for|while|switch|try|catch|return)\b/.test(text) ||
+      /^(List<|Map<|Set<|System\.out|def\s|print\(|let\s|const\s|var\s)/.test(text)
+    );
+  }
+
   private applyQuizSession(quiz: StartEvaluationDto): void {
     const selected = this.selectedForStart();
     this.activeAssignmentId.set(selected?.id ?? null);
@@ -240,6 +367,7 @@ export class MyEvaluations {
     this.quizQuestions.set((quiz.questions ?? []).map((q) => ({
       questionId: q.questionId,
       question: q.question,
+      code: q.code ?? null,
       options: q.options ?? [],
     })));
     this.currentQuestionIndex.set(0);

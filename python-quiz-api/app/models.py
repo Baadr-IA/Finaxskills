@@ -17,6 +17,7 @@ class GeneratedQuestion(BaseModel):
     topic: str
     targetedOutcome: str
     text: str
+    code: str | None = None
     optionA: str
     optionB: str
     optionC: str

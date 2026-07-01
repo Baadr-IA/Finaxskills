@@ -156,6 +156,7 @@ class AssessmentSessionControllerTest {
                             "Lists",
                             "Use common list APIs",
                             "What does list.append do?",
+                            null,
                             "Removes the last item",
                             "Adds an item to the end",
                             "Sorts the list",

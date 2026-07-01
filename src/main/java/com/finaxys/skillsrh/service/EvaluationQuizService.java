@@ -95,7 +95,7 @@ public class EvaluationQuizService {
             options.add(saveOption(question, "C", generatedQuestion.optionC(), expectedCode));
             options.add(saveOption(question, "D", generatedQuestion.optionD(), expectedCode));
 
-            questions.add(new StartQuestionResponse(question.getId(), generatedQuestion.text(), options));
+            questions.add(new StartQuestionResponse(question.getId(), generatedQuestion.text(), generatedQuestion.code(), options));
         }
 
         assignment.setGeneratedAt(Instant.now());
@@ -232,6 +232,7 @@ public class EvaluationQuizService {
     public record StartQuestionResponse(
         Long questionId,
         String question,
+        String code,
         List<StartOptionResponse> options
     ) {}
 

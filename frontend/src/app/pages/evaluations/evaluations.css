@@ -60,3 +60,6 @@ td .role-badge, td .level-badge{white-space:nowrap;overflow:hidden;text-overflow
   stroke:#1463b8;
 }
 
+.details-col{
+  text-align:center !important;
+}

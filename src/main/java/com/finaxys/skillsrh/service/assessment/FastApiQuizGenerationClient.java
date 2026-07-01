@@ -14,20 +14,27 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Service
 public class FastApiQuizGenerationClient implements QuizGenerationClient {
 
+    private static final Logger logger = Logger.getLogger(FastApiQuizGenerationClient.class.getName());
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final String baseUrl;
 
     public FastApiQuizGenerationClient(QuizGenerationProperties properties, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.baseUrl = properties.getBaseUrl();
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(properties.getConnectTimeout());
         requestFactory.setReadTimeout(properties.getReadTimeout());
+        logger.info("Initializing FastApiQuizGenerationClient with baseUrl=" + baseUrl + 
+            ", connectTimeout=" + properties.getConnectTimeout() + ", readTimeout=" + properties.getReadTimeout());
         this.restClient = RestClient.builder()
-            .baseUrl(properties.getBaseUrl())
+            .baseUrl(baseUrl)
             .requestFactory(requestFactory)
             .build();
     }
@@ -35,6 +42,10 @@ public class FastApiQuizGenerationClient implements QuizGenerationClient {
     @Override
     public QuizModels.GeneratedQuizBlock generateBlock(QuizModels.QuizGenerationRequest request) {
         try {
+            logger.info("Calling FastAPI quiz generation: POST " + baseUrl + 
+                "/api/v1/quiz-blocks/generate with request: skill=" + request.skill() + 
+                ", level=" + request.level() + ", count=" + request.questionCount());
+            
             QuizModels.GeneratedQuizBlock block = restClient.post()
                 .uri("/api/v1/quiz-blocks/generate")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -42,14 +53,19 @@ public class FastApiQuizGenerationClient implements QuizGenerationClient {
                 .retrieve()
                 .body(QuizModels.GeneratedQuizBlock.class);
 
+            logger.info("FastAPI quiz generation succeeded: " + block.questions().size() + " questions generated");
             validateBlock(block, request.questionCount());
             return block;
         } catch (ResourceAccessException exception) {
+            logger.severe("FastAPI quiz generation - connection error (unreachable or timeout): " + exception.getMessage());
             throw new ApiException(HttpStatus.GATEWAY_TIMEOUT, "quiz-api-unreachable",
                 "The external quiz API is unreachable or timed out");
         } catch (RestClientResponseException exception) {
+            logger.severe("FastAPI quiz generation - HTTP error: status=" + exception.getStatusCode() + 
+                ", body=" + exception.getResponseBodyAsString());
             throw mapFastApiError(exception);
         } catch (RestClientException exception) {
+            logger.severe("FastAPI quiz generation - unexpected error: " + exception.getMessage());
             throw new ApiException(HttpStatus.BAD_GATEWAY, "quiz-api-error",
                 "The external quiz API call failed");
         }

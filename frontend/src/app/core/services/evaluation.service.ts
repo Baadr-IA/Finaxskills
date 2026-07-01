@@ -40,6 +40,7 @@ export type QuizOptionDto = {
 export type QuizQuestionDto = {
   questionId: number;
   question: string;
+  code?: string | null;
   options: QuizOptionDto[];
 };
 

@@ -34,7 +34,7 @@
             <th>Score</th>
             <th>Date assignée</th>
             <th>Date limite</th>
-            <th>Actions</th>
+            <th class="details-col">Détails</th>
           </tr>
         </thead>
         <tbody>
@@ -68,7 +68,7 @@
                   <span class="dash">—</span>
                 }
               </td>
-              <td class="actions">
+              <td class="actions details-col">
                 <div class="action-group">
                   @for (action of eval.availableActions; track action) {
                     @if (action === 'start' || action === 'resume') {
@@ -149,7 +149,12 @@
 
       <div class="quiz-card">
         <p class="quiz-section">QUESTION</p>
-        <p class="quiz-question">{{ quizQuestions()[currentQuestionIndex()].question }}</p>
+        @if (currentQuestionContent().statement) {
+          <p class="quiz-question">{{ currentQuestionContent().statement }}</p>
+        }
+        @if (currentQuestionContent().code; as questionCode) {
+          <pre class="quiz-question-code"><code>{{ questionCode }}</code></pre>
+        }
 
         <div class="quiz-options">
           @for (opt of quizQuestions()[currentQuestionIndex()].options; track opt.code) {
