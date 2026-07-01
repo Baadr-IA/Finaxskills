@@ -101,8 +101,8 @@
 
 @if (selectedForStart(); as selected) {
   <div class="modal-overlay" role="dialog" aria-modal="true" (click)="closeStartModal()">
-    <div class="start-modal" (click)="$event.stopPropagation()">
-      <button class="modal-close" type="button" (click)="closeStartModal()" aria-label="Fermer">×</button>
+    <div class="start-modal" [class.start-modal-loading]="isStartingQuiz()" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" (click)="closeStartModal()" [disabled]="isStartingQuiz()" aria-label="Fermer">×</button>
       <h2 class="start-title">{{ selected.evaluation }}</h2>
       <p class="start-subtitle">{{ selected.competenceEvaluated }}</p>
 
@@ -125,6 +125,14 @@
       <button type="button" class="start-btn" (click)="startEvaluation()" [disabled]="isStartingQuiz()">
         {{ isStartingQuiz() ? 'Chargement...' : '▶ Commencer l’évaluation' }}
       </button>
+
+      @if (isStartingQuiz()) {
+        <div class="start-loading-overlay" aria-live="polite" aria-busy="true">
+          <div class="start-spinner" aria-hidden="true"></div>
+          <p class="start-loading-title">Génération des questions en cours…</p>
+          <p class="start-loading-subtitle">Merci de patienter, le quiz est en préparation.</p>
+        </div>
+      }
     </div>
   </div>
 }

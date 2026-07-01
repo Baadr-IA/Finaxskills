@@ -8,7 +8,7 @@
 .actions input{padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px}
 .card-body{padding:0}
 .evaluations-table{width:100%;border-collapse:collapse}
-.evaluations-table th, .evaluations-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);text-align:left}
+.evaluations-table th,.evaluations-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);text-align:center}
 .evaluations-table thead th{background:var(--card-bg);font-weight:600}
 .muted{color:var(--text-secondary)}
 

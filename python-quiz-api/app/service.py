@@ -203,11 +203,16 @@ def generate_with_llm(
     
     for attempt in range(attempts):
         print(f"[DEBUG] LLM attempt {attempt + 1}/{attempts}")
-        selected_concepts = random.choices(allowed_concepts, k=count)
-        selected_types = random.choices(QUESTION_TYPES, k=count)
+        selected_concepts = random.sample(allowed_concepts, k=min(len(allowed_concepts), count))
+        while len(selected_concepts) < count:
+            selected_concepts.append(random.choice(allowed_concepts))
+        random.shuffle(selected_concepts)
 
-        system_prompt = get_system_prompt(subject, level, count)
-        user_prompt = get_user_prompt(subject, level, selected_concepts, selected_types)
+        selected_types = random.choices(QUESTION_TYPES, k=count)
+        question_modes = build_question_modes(count)
+
+        system_prompt = get_system_prompt(subject, level, count, question_modes)
+        user_prompt = get_user_prompt(subject, level, selected_concepts, selected_types, question_modes)
 
         try:
             print(f"[DEBUG] Generating {count} questions in one LLM call")
@@ -221,7 +226,7 @@ def generate_with_llm(
 
             questions_generated: list[dict[str, Any]] = []
             for q_idx, question_json in enumerate(raw_questions[:count], start=1):
-                validate_question(question_json)
+                validate_question(question_json, question_modes[q_idx - 1] == "code")
                 questions_generated.append(question_json)
                 print(f"[DEBUG] Question {q_idx} generated successfully")
 
@@ -243,7 +248,19 @@ def generate_with_llm(
     )
 
 
-def get_system_prompt(subject: str, level: int, count: int) -> str:
+def build_question_modes(count: int) -> list[str]:
+    """Build a balanced mix of theory and code questions."""
+    if count <= 1:
+        return ["theory"]
+
+    code_count = max(1, min(count - 1, round(count * 0.4)))
+    theory_count = count - code_count
+    modes = ["code"] * code_count + ["theory"] * theory_count
+    random.shuffle(modes)
+    return modes
+
+
+def get_system_prompt(subject: str, level: int, count: int, question_modes: list[str]) -> str:
     """Generate system prompt for LLM."""
     level_desc = {
         1: "Débutant (syntaxe, variables, OOP basique)",
@@ -256,6 +273,9 @@ def get_system_prompt(subject: str, level: int, count: int) -> str:
 
 Génère EXACTEMENT {count} questions QCM de très haute qualité en JSON.
 
+Répartition demandée des questions:
+{', '.join(f'{idx + 1}:{mode}' for idx, mode in enumerate(question_modes))}
+
 Sujet: {subject}
 Niveau: {level_desc}
 Langue: Français (termes techniques en anglais)
@@ -263,10 +283,11 @@ Langue: Français (termes techniques en anglais)
 Exigences:
 1. Chaque question doit tester un seul concept
 2. Exactement 4 options (une correcte, trois plausibles)
-3. Code compilable et réaliste si applicable
-4. Réponses représentent des erreurs courantes
-5. Pas de réponses évidentes, pas de blagues
-6. Questions d'examen de certification
+3. Si le mode est "code", la propriété code doit contenir un extrait réaliste et compilable
+4. Si le mode est "theory", la propriété code doit être null
+5. Réponses représentent des erreurs courantes
+6. Pas de réponses évidentes, pas de blagues
+7. Questions d'examen de certification
 
 Format JSON OBLIGATOIRE (valide):
 {{
@@ -289,16 +310,26 @@ Format JSON OBLIGATOIRE (valide):
 Retourne UNIQUEMENT le JSON, pas de markdown."""
 
 
-def get_user_prompt(subject: str, level: int, concepts: list[str], question_types: list[str]) -> str:
+def get_user_prompt(
+    subject: str,
+    level: int,
+    concepts: list[str],
+    question_types: list[str],
+    question_modes: list[str],
+) -> str:
     """Generate user prompt for LLM."""
     assignments = [
-        f"{idx + 1}. concept='{concept}', type='{question_types[idx]}'"
+        f"{idx + 1}. mode='{question_modes[idx]}', concept='{concept}', type='{question_types[idx]}'"
         for idx, concept in enumerate(concepts)
     ]
     return (
         f"Génère {len(concepts)} questions {subject} niveau {level} en respectant ce plan exact:\n"
         + "\n".join(assignments)
-        + "\n\nRetourne UNIQUEMENT du JSON valide avec la clé top-level 'questions'."
+        + "\n\nContraintes supplémentaires:\n"
+        + "- Le texte de la question doit rester lisible et ne pas inclure le code.\n"
+        + "- Quand mode='code', mets le snippet uniquement dans le champ code.\n"
+        + "- Quand mode='theory', mets code à null.\n"
+        + "\nRetourne UNIQUEMENT du JSON valide avec la clé top-level 'questions'."
     )
 
 
@@ -356,7 +387,7 @@ def extract_json(text: str) -> str:
     return text
 
 
-def validate_question(q: dict[str, Any]) -> None:
+def validate_question(q: dict[str, Any], require_code: bool = False) -> None:
     """Validate generated question."""
     required = ["question", "concept", "questionType", "level", "subject", "options", "correctAnswer", "explanation"]
     for field in required:
@@ -377,6 +408,13 @@ def validate_question(q: dict[str, Any]) -> None:
     
     if len(str(q.get("question", "")).strip()) < 15:
         raise QuizApiError("invalid-question", "Question text too short (min 15 chars)")
+
+    code_value = q.get("code")
+    if require_code and (not isinstance(code_value, str) or not code_value.strip()):
+        raise QuizApiError("invalid-question", "Code question must include a code snippet")
+    if not require_code and code_value not in (None, ""):
+        if not isinstance(code_value, str) or not code_value.strip():
+            raise QuizApiError("invalid-question", "Theory question code must be null or empty")
 
 
 def generate_fallback(

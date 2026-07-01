@@ -144,6 +144,7 @@ export class MyEvaluations {
   }
 
   closeStartModal(): void {
+    if (this.isStartingQuiz()) return;
     this.selectedForStart.set(null);
   }
 

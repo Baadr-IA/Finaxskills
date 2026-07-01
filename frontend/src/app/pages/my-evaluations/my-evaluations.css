@@ -69,7 +69,7 @@
 
 .evaluations-table th {
   padding: 1rem;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--text-primary, #333);
@@ -86,24 +86,13 @@
 .evaluations-table td {
   padding: 1rem;
   font-size: 0.95rem;
+  text-align: center;
   color: var(--text-primary, #333);
 }
 
 .evaluation-name {
   font-weight: 600;
   color: var(--text-primary, #333);
-}
-
-.time {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary, #666);
-}
-
-.time svg {
-  width: 18px;
-  height: 18px;
 }
 
 .status-badge {
@@ -178,15 +167,6 @@
 }
 
 .actions {
-  text-align: center;
-}
-
-.details-col {
-  text-align: center;
-}
-
-.evaluations-table th.details-col,
-.evaluations-table td.details-col {
   text-align: center;
 }
 
@@ -333,6 +313,38 @@
 .start-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.start-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: center;
+}
+
+.start-spinner {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 0.3rem solid #fde4d3;
+  border-top-color: #f97316;
+  animation: spin 0.9s linear infinite;
+}
+
+.start-loading-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.start-loading-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
 }
 
 .completion-modal {
@@ -597,4 +609,9 @@
 .quiz-next:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
