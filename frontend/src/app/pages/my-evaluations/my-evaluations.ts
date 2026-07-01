@@ -199,6 +199,7 @@ export class MyEvaluations {
   }
 
   closeQuiz(): void {
+    this.selectedForStart.set(null);
     this.activeAssignmentId.set(null);
     this.activeEvaluation.set(null);
     this.activeCompetence.set(null);
@@ -380,6 +381,7 @@ export class MyEvaluations {
     if (!assignmentId || this.isSubmittingQuiz()) return;
     this.isSubmittingQuiz.set(true);
     try {
+      this.selectedForStart.set(null);
       const answers = this.quizQuestions().map((_, index) => ({
         questionIndex: index + 1,
         optionCode: this.selectedByQuestion()[index] ?? '',
