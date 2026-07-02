@@ -7,6 +7,7 @@ import com.finaxys.skillsrh.domain.Skill;
 import com.finaxys.skillsrh.repository.CollaboratorRepository;
 import com.finaxys.skillsrh.repository.CollaboratorSkillRepository;
 import com.finaxys.skillsrh.repository.SkillRepository;
+import com.finaxys.skillsrh.service.CollaboratorDeletionService;
 import com.finaxys.skillsrh.service.KeycloakAdminService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -15,7 +16,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.apache.commons.logging.Log;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,17 +39,20 @@ public class CollaboratorController {
     private final CollaboratorRepository collaboratorRepository;
     private final CollaboratorSkillRepository collaboratorSkillRepository;
     private final SkillRepository skillRepository;
+    private final CollaboratorDeletionService collaboratorDeletionService;
     private final KeycloakAdminService keycloakAdminService;
 
     public CollaboratorController(
         CollaboratorRepository collaboratorRepository,
         CollaboratorSkillRepository collaboratorSkillRepository,
         SkillRepository skillRepository,
+        CollaboratorDeletionService collaboratorDeletionService,
         KeycloakAdminService keycloakAdminService
     ) {
         this.collaboratorRepository = collaboratorRepository;
         this.collaboratorSkillRepository = collaboratorSkillRepository;
         this.skillRepository = skillRepository;
+        this.collaboratorDeletionService = collaboratorDeletionService;
         this.keycloakAdminService = keycloakAdminService;
     }
 
@@ -82,8 +85,7 @@ public class CollaboratorController {
         // attempt to create Keycloak user using caller token if they have MANAGE_USERS role, otherwise fall back to admin credentials
         try {
             String kcId = null;
-            boolean triedWithCaller = false;
-            if (authentication != null && authentication.getAuthorities() != null) {
+            if (authentication != null) {
                 boolean hasManage = authentication.getAuthorities().stream()
                     .anyMatch(a -> "ROLE_MANAGE_USERS".equals(a.getAuthority()));
                 if (hasManage) {
@@ -92,7 +94,6 @@ public class CollaboratorController {
                         if (authentication instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwtAuth) {
                             String bearer = jwtAuth.getToken().getTokenValue();
                             kcId = keycloakAdminService.createUserIfNotExistsWithBearer(bearer, req.email(), req.firstName(), req.lastName());
-                            triedWithCaller = true;
                         }
                     } catch (Exception ignored) {
                     }
@@ -143,7 +144,7 @@ public class CollaboratorController {
     @DeleteMapping("/collaborators/{id}")
     @PreAuthorize("@permissions.has(authentication, 'COLLABORATORS', 'DELETE', 'ALL')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        collaboratorRepository.findById(id).ifPresent(collaboratorRepository::delete);
+        collaboratorDeletionService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 

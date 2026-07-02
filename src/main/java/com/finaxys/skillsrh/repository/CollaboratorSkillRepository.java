@@ -12,4 +12,6 @@ public interface CollaboratorSkillRepository extends JpaRepository<CollaboratorS
 
     @Query("SELECT cs FROM CollaboratorSkill cs JOIN FETCH cs.skill s JOIN FETCH s.category WHERE cs.collaborator.id = :collaboratorId")
     List<CollaboratorSkill> findByCollaboratorId(@Param("collaboratorId") Long collaboratorId);
+
+    void deleteByCollaborator_Id(Long collaboratorId);
 }

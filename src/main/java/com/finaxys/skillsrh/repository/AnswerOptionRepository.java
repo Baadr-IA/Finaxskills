@@ -10,5 +10,7 @@ public interface AnswerOptionRepository extends JpaRepository<AnswerOption, Long
 
     void deleteByQuestion_IdIn(Collection<Long> questionIds);
 
+    void deleteByQuestion_TestCollab_Collaborator_Id(Long collaboratorId);
+
     Optional<AnswerOption> findByQuestion_IdAndOptionCodeIgnoreCase(Long questionId, String optionCode);
 }

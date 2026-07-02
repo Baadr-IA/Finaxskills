@@ -11,4 +11,6 @@ public interface TestCollabRepository extends JpaRepository<TestCollab, Long> {
     List<TestCollab> findByCollaborator_IdOrderByAssignedAtDesc(Long collaboratorId);
 
     Optional<TestCollab> findByIdAndCollaborator_Id(Long id, Long collaboratorId);
+
+    void deleteByCollaborator_Id(Long collaboratorId);
 }
