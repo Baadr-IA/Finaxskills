@@ -12,8 +12,8 @@ type Evaluation = {
   jobTitle: string | null;
   evaluation: string;
   status: EvalStatus;
+  statusLabel: string;
   dateAssigned: string;
-  datePlanned?: string | null;
   dateValidated?: string | null;
   levelDeclared?: string | null;
   levelValidated?: string | null;
@@ -79,13 +79,12 @@ export class Evaluations {
   });
 
   constructor() {
-    // reactive effect: load data whenever search or filter changes
+    // reactive effect: load data whenever search changes
     effect(() => {
       const q = this.search();
-      const f = this.filter();
-      const useRemote = q.trim().length >= 3 || f !== 'all';
+      const useRemote = q.trim().length >= 3;
       if (useRemote) {
-        this.load(q.trim().length >= 3 ? q.trim() : undefined, f !== 'all' ? f : undefined);
+        this.load(q.trim());
       } else {
         this.load();
       }
@@ -149,9 +148,9 @@ export class Evaluations {
     }
   }
 
-  async load(q?: string, status?: 'pending' | 'in_progress' | 'completed' | undefined) {
+  async load(q?: string) {
     try {
-      const data = await this.evaluationService.list(q, status as string | undefined);
+      const data = await this.evaluationService.listAll(q);
       const mapped: Evaluation[] = (data || []).map((d: EvaluationDto) => this.mapDto(d));
       this.all.set(mapped);
     } catch (err) {
@@ -160,14 +159,15 @@ export class Evaluations {
   }
 
   private mapDto(d: EvaluationDto): Evaluation {
+    const normalizedStatus = normalizeStatus(d.status);
     return {
       id: d.id,
       collaborator: d.collaborator,
       jobTitle: d.jobTitle ?? null,
       evaluation: d.evaluation,
-      status: normalizeStatus(d.status),
+      status: normalizedStatus,
+      statusLabel: d.status?.trim() || defaultStatusLabel(normalizedStatus),
       dateAssigned: d.dateAssigned,
-      datePlanned: d.datePlanned ?? null,
       dateValidated: d.dateValidated ?? null,
       levelDeclared: d.levelDeclared ?? null,
       levelValidated: d.levelValidated ?? null,
@@ -209,5 +209,8 @@ function normalizeStatus(status: string | null | undefined): EvalStatus {
   return 'pending';
 }
 
-
-
+function defaultStatusLabel(status: EvalStatus): string {
+  if (status === 'pending') return 'en attente';
+  if (status === 'in_progress') return 'en cours';
+  return 'complété';
+}

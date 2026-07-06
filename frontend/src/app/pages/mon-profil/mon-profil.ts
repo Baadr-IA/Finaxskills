@@ -96,7 +96,7 @@ export class MonProfil {
   }
 
   levelLabel(level: number): string {
-    const labels: Record<number, string> = { 1: 'Débutant', 2: 'Notions', 3: 'Intermédiaire', 4: 'Avancé', 5: 'Expert' };
+    const labels: Record<number, string> = { 1: 'Débutant', 2: 'Intermédiaire', 3: 'Avancé', 4: 'Expert'};
     return labels[level] ?? String(level);
   }
 
@@ -107,5 +107,5 @@ export class MonProfil {
     return 'level--high';
   }
 
-  readonly levelRange = [1, 2, 3, 4, 5] as const;
+  readonly levelRange = [1, 2, 3, 4] as const;
 }

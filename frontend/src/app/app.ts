@@ -9,6 +9,19 @@ import {
 } from 'keycloak-angular';
 
 import { PermissionStoreService } from './auth/permission-store.service';
+import type { PermissionRequirement } from './auth/auth.types';
+
+const readOwnEvaluations: PermissionRequirement = {
+  resource: 'COLLABORATORS',
+  action: 'READ',
+  scope: 'SELF',
+};
+
+const readAllCollaborators: PermissionRequirement = {
+  resource: 'COLLABORATORS',
+  action: 'READ',
+  scope: 'ALL',
+};
 
 @Component({
   selector: 'app-root',
@@ -26,6 +39,7 @@ export class App {
   protected readonly authenticated = signal(false);
   protected readonly username = signal<string | null>(null);
   protected readonly userMenuOpen = signal(false);
+  protected readonly isCollaboratorOnly = signal(false);
 
   protected readonly initials = computed(() => {
     const u = this.username();
@@ -96,12 +110,30 @@ export class App {
 
     this.username.set(tokenPayload?.preferred_username ?? tokenPayload?.sub ?? null);
     await this.permissionStore.ensureLoaded();
+
+    const isCollaboratorOnly =
+      this.permissionStore.hasPermission(readOwnEvaluations) &&
+      !this.permissionStore.hasPermission(readAllCollaborators);
+    this.isCollaboratorOnly.set(isCollaboratorOnly);
+
+    const isDefaultLandingUrl = this.router.url === '/' || this.router.url === '/dashboard';
+    if (isCollaboratorOnly && isDefaultLandingUrl) {
+      await this.router.navigateByUrl('/mes-evaluations');
+      return;
+    }
+
+    const isRhLandingOnCollaboratorHome = !isCollaboratorOnly
+      && (this.router.url === '/' || this.router.url === '/mes-evaluations');
+    if (isRhLandingOnCollaboratorHome) {
+      await this.router.navigateByUrl('/dashboard');
+    }
   }
 
   private clearAuthState(): void {
     this.authenticated.set(false);
     this.username.set(null);
     this.userMenuOpen.set(false);
+    this.isCollaboratorOnly.set(false);
     this.permissionStore.clear();
   }
 }

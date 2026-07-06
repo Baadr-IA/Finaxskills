@@ -29,6 +29,7 @@ public final class QuizModels {
         String topic,
         String targetedOutcome,
         String text,
+        String code,
         String optionA,
         String optionB,
         String optionC,

@@ -16,6 +16,51 @@ export type EvaluationDto = {
   score?: string | null;
 };
 
+export type MyEvaluationDto = {
+  id: number;
+  evaluationId: number;
+  evaluation: string;
+  dateAssigned: string;
+  status?: string | null;
+  competenceEvaluated?: string | null;
+  levelDeclared?: string | null;
+  levelValidated?: string | null;
+  progress: number;
+  score?: string | null;
+  dueDate?: string | null;
+  availableActions: string[];
+};
+
+export type QuizOptionDto = {
+  code: string;
+  text: string;
+  correct: boolean;
+};
+
+export type QuizQuestionDto = {
+  questionId: number;
+  question: string;
+  code?: string | null;
+  options: QuizOptionDto[];
+};
+
+export type StartEvaluationDto = {
+  quizTitle: string;
+  questions: QuizQuestionDto[];
+};
+
+export type SubmitEvaluationAnswersRequest = {
+  answers: { questionIndex: number; optionCode: string }[];
+};
+
+export type SubmitEvaluationResultDto = {
+  score: number;
+  answeredQuestions: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  status: string;
+};
+
 export type CreateEvaluationRequest = {
   collaboratorId: number;
   evaluationName: string;
@@ -25,15 +70,29 @@ export type CreateEvaluationRequest = {
 export class EvaluationService {
   private readonly http = inject(HttpClient);
 
-  list(q?: string, status?: string): Promise<EvaluationDto[]> {
+  listAll(q?: string, status?: string): Promise<EvaluationDto[]> {
     let params = new HttpParams();
     if (q && q.trim().length > 0) params = params.set('q', q.trim());
     if (status && status.trim().length > 0) params = params.set('status', status.trim());
     return firstValueFrom(this.http.get<EvaluationDto[]>('/api/evaluations', { params }));
   }
 
+  listMine(q?: string, status?: string): Promise<MyEvaluationDto[]> {
+    let params = new HttpParams();
+    if (q && q.trim().length > 0) params = params.set('q', q.trim());
+    if (status && status.trim().length > 0) params = params.set('status', status.trim());
+    return firstValueFrom(this.http.get<MyEvaluationDto[]>('/api/me/evaluations', { params }));
+  }
+
   createAssignment(payload: CreateEvaluationRequest): Promise<EvaluationDto> {
     return firstValueFrom(this.http.post<EvaluationDto>('/api/evaluations', payload));
   }
-}
 
+  startMine(assignmentId: number): Promise<StartEvaluationDto> {
+    return firstValueFrom(this.http.post<StartEvaluationDto>(`/api/me/evaluations/${assignmentId}/start`, {}));
+  }
+
+  submitMineAnswers(assignmentId: number, payload: SubmitEvaluationAnswersRequest): Promise<SubmitEvaluationResultDto> {
+    return firstValueFrom(this.http.post<SubmitEvaluationResultDto>(`/api/me/evaluations/${assignmentId}/answers`, payload));
+  }
+}

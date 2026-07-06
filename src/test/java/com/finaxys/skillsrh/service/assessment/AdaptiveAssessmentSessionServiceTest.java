@@ -178,11 +178,11 @@ class AdaptiveAssessmentSessionServiceTest {
         return new QuizModels.GeneratedQuizBlock(
             "Quiz level " + level,
             List.of(
-                new QuizModels.GeneratedQuestion("q1", "Topic 1", "Outcome 1", "Question 1", "A", "B", "C", "D", "Explanation 1"),
-                new QuizModels.GeneratedQuestion("q2", "Topic 2", "Outcome 2", "Question 2", "A", "B", "C", "D", "Explanation 2"),
-                new QuizModels.GeneratedQuestion("q3", "Topic 3", "Outcome 3", "Question 3", "A", "B", "C", "D", "Explanation 3"),
-                new QuizModels.GeneratedQuestion("q4", "Topic 4", "Outcome 4", "Question 4", "A", "B", "C", "D", "Explanation 4"),
-                new QuizModels.GeneratedQuestion("q5", "Topic 5", "Outcome 5", "Question 5", "A", "B", "C", "D", "Explanation 5")
+                new QuizModels.GeneratedQuestion("q1", "Topic 1", "Outcome 1", "Question 1", null, "A", "B", "C", "D", "Explanation 1"),
+                new QuizModels.GeneratedQuestion("q2", "Topic 2", "Outcome 2", "Question 2", null, "A", "B", "C", "D", "Explanation 2"),
+                new QuizModels.GeneratedQuestion("q3", "Topic 3", "Outcome 3", "Question 3", null, "A", "B", "C", "D", "Explanation 3"),
+                new QuizModels.GeneratedQuestion("q4", "Topic 4", "Outcome 4", "Question 4", null, "A", "B", "C", "D", "Explanation 4"),
+                new QuizModels.GeneratedQuestion("q5", "Topic 5", "Outcome 5", "Question 5", null, "A", "B", "C", "D", "Explanation 5")
             ),
             List.of(
                 new QuizModels.ExpectedAnswer("q1", "A"),

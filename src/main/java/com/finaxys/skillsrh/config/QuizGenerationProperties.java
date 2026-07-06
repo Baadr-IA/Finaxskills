@@ -8,8 +8,8 @@ import java.time.Duration;
 public class QuizGenerationProperties {
 
     private String baseUrl = "http://localhost:8000";
-    private Duration connectTimeout = Duration.ofSeconds(2);
-    private Duration readTimeout = Duration.ofSeconds(10);
+    private Duration connectTimeout = Duration.ofSeconds(5);
+    private Duration readTimeout = Duration.ofSeconds(180);  // 180 seconds pour 5 questions (~20s chaque)
     private int blockQuestionCount = 5;
     private int totalBlocks = 5;
 

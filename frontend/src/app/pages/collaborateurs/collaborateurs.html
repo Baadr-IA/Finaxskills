@@ -98,12 +98,32 @@
                 [value]="formState()!.jobTitle"
                 (input)="formState.update(s => s ? {...s, jobTitle: $any($event.target).value} : s)" />
             </div>
-            <div class="field">
-              <label for="keycloakId">Keycloak ID</label>
-              <input id="keycloakId" type="text"
-                [value]="formState()!.keycloakId"
-                (input)="formState.update(s => s ? {...s, keycloakId: $any($event.target).value} : s)" />
-            </div>
+            @if (formState()!.mode === 'create') {
+              <div class="field">
+                <label for="skillId">Compétence <span class="required">*</span></label>
+                <select id="skillId" [value]="formState()!.skillId ?? ''" (change)="onSkillChange($any($event.target).value)">
+                  <option value="">Sélectionner une compétence</option>
+                  @if (isSkillsLoading()) {
+                    <option value="" disabled>Chargement...</option>
+                  } @else {
+                    @for (skill of availableSkills(); track skill.id) {
+                      <option [value]="skill.id">{{ skill.name }}</option>
+                    }
+                  }
+                </select>
+              </div>
+              @if (formState()!.skillId != null) {
+                <div class="field">
+                  <label for="selfLevel">Niveau <span class="required">*</span></label>
+                  <select id="selfLevel" [value]="formState()!.selfLevel ?? ''" (change)="onLevelChange($any($event.target).value)">
+                    <option value="">Sélectionner un niveau</option>
+                    @for (level of levelOptions; track level.value) {
+                      <option [value]="level.value">{{ level.label }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            }
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-outline" (click)="closeForm()">Annuler</button>

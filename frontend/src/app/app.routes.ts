@@ -6,6 +6,7 @@ import type { PermissionRequirement } from './auth/auth.types';
 const readCollaborators: PermissionRequirement = { resource: 'COLLABORATORS', action: 'READ', scope: 'ALL' };
 const readSkills: PermissionRequirement = { resource: 'SKILLS', action: 'READ', scope: 'ALL' };
 const readSelfAssessments: PermissionRequirement = { resource: 'SKILL_ASSESSMENTS', action: 'READ', scope: 'SELF' };
+const readSelfEvaluations: PermissionRequirement = { resource: 'COLLABORATORS', action: 'READ', scope: 'SELF' };
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -44,6 +45,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { permission: readSelfAssessments },
     loadComponent: () => import('./pages/mon-profil/mon-profil').then((m) => m.MonProfil),
+  },
+  {
+    path: 'mes-evaluations',
+    canActivate: [authGuard],
+    data: { permission: readSelfEvaluations },
+    loadComponent: () => import('./pages/my-evaluations/my-evaluations').then((m) => m.MyEvaluations),
   },
   {
     path: 'forbidden',

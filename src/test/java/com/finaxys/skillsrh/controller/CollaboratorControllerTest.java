@@ -2,6 +2,8 @@ package com.finaxys.skillsrh.controller;
 
 import com.finaxys.skillsrh.config.DataInitializer;
 import com.finaxys.skillsrh.domain.Collaborator;
+import com.finaxys.skillsrh.domain.Skill;
+import com.finaxys.skillsrh.domain.SkillCategory;
 import com.finaxys.skillsrh.repository.CollaboratorRepository;
 import com.finaxys.skillsrh.repository.CollaboratorSkillRepository;
 import com.finaxys.skillsrh.repository.GreetingRepository;
@@ -13,6 +15,8 @@ import com.finaxys.skillsrh.security.permission.PermissionProfile;
 import com.finaxys.skillsrh.security.permission.PermissionProfileRepository;
 import com.finaxys.skillsrh.security.permission.ResourceKey;
 import com.finaxys.skillsrh.security.permission.Scope;
+import com.finaxys.skillsrh.service.CollaboratorDeletionService;
+import com.finaxys.skillsrh.service.KeycloakAdminService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -75,6 +80,12 @@ class CollaboratorControllerTest {
 
     @MockitoBean
     private GreetingRepository greetingRepository;
+
+    @MockitoBean
+    private CollaboratorDeletionService collaboratorDeletionService;
+
+    @MockitoBean
+    private KeycloakAdminService keycloakAdminService;
 
     @MockitoBean
     private PermissionProfileRepository permissionProfileRepository;
@@ -151,11 +162,12 @@ class CollaboratorControllerTest {
     @Test
     void createCollaboratorReturns201WhenAuthorized() throws Exception {
         Collaborator saved = new Collaborator("Claire", "Leroy", "claire@test.com", "DevOps", null);
+        when(skillRepository.findById(10L)).thenReturn(Optional.of(new Skill("Java", "", new SkillCategory("Backend", ""))));
         when(collaboratorRepository.save(any(Collaborator.class))).thenReturn(saved);
 
         mockMvc.perform(post("/api/collaborators")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"firstName\":\"Claire\",\"lastName\":\"Leroy\",\"email\":\"claire@test.com\",\"jobTitle\":\"DevOps\"}")
+                .content("{\"firstName\":\"Claire\",\"lastName\":\"Leroy\",\"email\":\"claire@test.com\",\"jobTitle\":\"DevOps\",\"skillId\":10,\"selfLevel\":2}")
                 .with(authenticatedUser("hr-user", "HR")))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.firstName").value("Claire"));
@@ -165,7 +177,7 @@ class CollaboratorControllerTest {
     void createCollaboratorReturns422WhenRequestInvalid() throws Exception {
         mockMvc.perform(post("/api/collaborators")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"firstName\":\"\",\"lastName\":\"Leroy\",\"email\":\"claire@test.com\"}")
+                .content("{\"firstName\":\"\",\"lastName\":\"Leroy\",\"email\":\"claire@test.com\",\"skillId\":10,\"selfLevel\":2}")
                 .with(authenticatedUser("hr-user", "HR")))
             .andExpect(status().isUnprocessableContent())
             .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
@@ -175,12 +187,13 @@ class CollaboratorControllerTest {
 
     @Test
     void createCollaboratorReturns409WhenEmailAlreadyExists() throws Exception {
+        when(skillRepository.findById(10L)).thenReturn(Optional.of(new Skill("Java", "", new SkillCategory("Backend", ""))));
         when(collaboratorRepository.save(any(Collaborator.class)))
             .thenThrow(new DataIntegrityViolationException("duplicate email"));
 
         mockMvc.perform(post("/api/collaborators")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"firstName\":\"Alice\",\"lastName\":\"Martin\",\"email\":\"alice@test.com\"}")
+                .content("{\"firstName\":\"Alice\",\"lastName\":\"Martin\",\"email\":\"alice@test.com\",\"skillId\":10,\"selfLevel\":2}")
                 .with(authenticatedUser("hr-user", "HR")))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.type").value("urn:template-app:problem:collaborator-email-conflict"));
@@ -195,12 +208,11 @@ class CollaboratorControllerTest {
 
     @Test
     void deleteCollaboratorReturns204WhenAdminDeletes() throws Exception {
-        Collaborator alice = new Collaborator("Alice", "Martin", "alice@test.com", null, null);
-        when(collaboratorRepository.findById(1L)).thenReturn(Optional.of(alice));
-
         mockMvc.perform(delete("/api/collaborators/1")
                 .with(authenticatedUser("admin-user", "ADMIN")))
             .andExpect(status().isNoContent());
+
+        verify(collaboratorDeletionService).deleteById(1L);
     }
 
     private RequestPostProcessor authenticatedUser(String subject, String role) {

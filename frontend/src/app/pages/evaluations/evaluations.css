@@ -8,7 +8,7 @@
 .actions input{padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px}
 .card-body{padding:0}
 .evaluations-table{width:100%;border-collapse:collapse}
-.evaluations-table th, .evaluations-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);text-align:left}
+.evaluations-table th,.evaluations-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--border);text-align:center}
 .evaluations-table thead th{background:var(--card-bg);font-weight:600}
 .muted{color:var(--text-secondary)}
 
@@ -34,4 +34,32 @@ td .role-badge, td .level-badge{white-space:nowrap;overflow:hidden;text-overflow
 
 .search-hint{font-size:0.78rem;color:#7a7a7a;margin-top:0.35rem}
 
+.detail-eye{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1.75rem;
+  height:1.75rem;
+  border:none;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+}
 
+.detail-eye svg{
+  width:1.1rem;
+  height:1.1rem;
+  fill:none;
+  stroke:#1f7ae0;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.detail-eye:hover svg{
+  stroke:#1463b8;
+}
+
+.details-col{
+  text-align:center !important;
+}

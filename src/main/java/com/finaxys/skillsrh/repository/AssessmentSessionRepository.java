@@ -11,4 +11,6 @@ public interface AssessmentSessionRepository extends JpaRepository<AssessmentSes
     @Override
     @EntityGraph(attributePaths = {"collaborator", "skill", "skill.category"})
     Optional<AssessmentSession> findById(Long id);
+
+    void deleteByCollaborator_Id(Long collaboratorId);
 }
