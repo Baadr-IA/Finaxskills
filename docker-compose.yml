@@ -75,6 +75,7 @@ services:
       APP_SECURITY_OAUTH2_AUDIENCE: template-app-spring-api
       APP_SECURITY_OAUTH2_API_CLIENT_ID: template-app-spring-api
       APP_QUIZ_GENERATION_BASE_URL: http://python-quiz-api:8000
+      APP_SECURITY_CORS_ALLOWED_ORIGINS: https://d5gh6bzb2yxfi.cloudfront.net
     ports:
       - "8080:8080"
     depends_on:
